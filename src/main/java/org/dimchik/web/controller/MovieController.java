@@ -1,7 +1,6 @@
 package org.dimchik.web.controller;
 
-import jakarta.websocket.server.PathParam;
-import org.dimchik.dto.ApiResponseDTO;
+import lombok.RequiredArgsConstructor;
 import org.dimchik.dto.MovieResponseDTO;
 import org.dimchik.service.MovieService;
 import org.springframework.http.HttpStatus;
@@ -13,15 +12,12 @@ import java.util.List;
 
 @RestController
 @RequestMapping("api/v1/movies")
+@RequiredArgsConstructor
 public class MovieController {
     private final MovieService movieService;
 
-    public MovieController(MovieService movieService) {
-        this.movieService = movieService;
-    }
-
     @GetMapping
-    public ResponseEntity<ApiResponseDTO> findAll(
+    public ResponseEntity<List<MovieResponseDTO>> findAll(
             @RequestParam(required = false) String rating,
             @RequestParam(required = false) String price) {
         HashMap<String, String> filter = new HashMap<>();
@@ -33,26 +29,26 @@ public class MovieController {
         }
         List<MovieResponseDTO> movies = movieService.findAll(filter);
 
-        return new ResponseEntity<>(ApiResponseDTO.success(movies), HttpStatus.OK);
+        return new ResponseEntity<>(movies, HttpStatus.OK);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<ApiResponseDTO> findById(@PathVariable long id) {
+    public ResponseEntity<MovieResponseDTO> findById(@PathVariable long id) {
         MovieResponseDTO movieResponseDTO = movieService.findById(id);
-        return new ResponseEntity<>(ApiResponseDTO.success(movieResponseDTO), HttpStatus.OK);
+        return new ResponseEntity<>(movieResponseDTO, HttpStatus.OK);
     }
 
     @GetMapping("random")
-    public ResponseEntity<ApiResponseDTO> random() {
+    public ResponseEntity<List<MovieResponseDTO>> random() {
         List<MovieResponseDTO> movies = movieService.random(3);
 
-        return new ResponseEntity<>(ApiResponseDTO.success(movies), HttpStatus.OK);
+        return new ResponseEntity<>(movies, HttpStatus.OK);
     }
 
     @GetMapping("genre/{genreId}")
-    public ResponseEntity<ApiResponseDTO> findByGenreId(@PathVariable long genreId) {
+    public ResponseEntity<List<MovieResponseDTO>> findByGenreId(@PathVariable long genreId) {
         List<MovieResponseDTO> movies = movieService.findByGenreId(genreId);
 
-        return new ResponseEntity<>(ApiResponseDTO.success(movies), HttpStatus.OK);
+        return new ResponseEntity<>(movies, HttpStatus.OK);
     }
 }

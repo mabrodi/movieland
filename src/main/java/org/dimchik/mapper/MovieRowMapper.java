@@ -2,9 +2,11 @@ package org.dimchik.mapper;
 
 import org.dimchik.dto.MovieResponseDTO;
 import org.dimchik.entity.Movie;
+import org.springframework.stereotype.Component;
 
+@Component
 public class MovieRowMapper {
-    public static MovieResponseDTO convertToDTO(Movie movie) {
+    public MovieResponseDTO convertToDTO(Movie movie) {
         MovieResponseDTO movieResponseDTO = new MovieResponseDTO();
         movieResponseDTO.setId(movie.getId());
         movieResponseDTO.setNameRussian(movie.getNameRussian());

@@ -1,6 +1,5 @@
 package org.dimchik.web.controller;
 
-import org.dimchik.dto.ApiResponseDTO;
 import org.dimchik.dto.GenreResponseDTO;
 import org.dimchik.service.GenreService;
 import org.springframework.http.HttpStatus;
@@ -21,9 +20,9 @@ public class GenreController {
     }
 
     @GetMapping
-    public ResponseEntity<ApiResponseDTO> findAll() {
+    public ResponseEntity<List<GenreResponseDTO>> findAll() {
         List<GenreResponseDTO> genreResponseDTOList = genreService.findAll();
 
-        return new ResponseEntity<>(ApiResponseDTO.success(genreResponseDTOList), HttpStatus.OK);
+        return new ResponseEntity<>(genreResponseDTOList, HttpStatus.OK);
     }
 }
