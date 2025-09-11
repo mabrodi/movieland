@@ -3,7 +3,7 @@ package org.dimchik.service.base;
 import lombok.extern.slf4j.Slf4j;
 import org.dimchik.dto.MovieResponseDTO;
 import org.dimchik.entity.Movie;
-import org.dimchik.exception.NotFoundException;
+import org.dimchik.exception.ResourceNotFoundException;
 import org.dimchik.repository.MovieRepository;
 import org.dimchik.mapper.MovieRowMapper;
 import org.dimchik.repository.specification.MovieSortSpecification;
@@ -26,20 +26,10 @@ public class MovieServiceBase implements MovieService {
 
     @Override
     public List<MovieResponseDTO> findAll(HashMap<String, String> filter) {
-        List<MovieResponseDTO> movieResponseDTOList;
-
         Sort sort = buildSortFromFilter(filter);
         List<Movie> movieList = movieRepository.findAll(sort);
 
-        if (!movieList.isEmpty()) {
-            movieResponseDTOList = movieList.stream()
-                    .map(movieRowMapper::convertToDTO)
-                    .toList();
-        } else {
-            movieResponseDTOList = Collections.emptyList();
-        }
-
-        return movieResponseDTOList;
+        return convertToDtoList(movieList);
     }
 
     @Override
@@ -62,31 +52,18 @@ public class MovieServiceBase implements MovieService {
 
     @Override
     public MovieResponseDTO findById(long id) {
-        MovieResponseDTO movieResponseDTO;
-
 
         Movie movie = movieRepository.findById(id)
-                .orElseThrow(() -> new NotFoundException("Movie not found with id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Movie not found with id: " + id));
 
-        movieResponseDTO = movieRowMapper.convertToDTO(movie);
-
-        return movieResponseDTO;
+        return movieRowMapper.convertToDTO(movie);
     }
 
     @Override
     public List<MovieResponseDTO> findByGenreId(long genreId) {
-        List<MovieResponseDTO> movieResponseDTOList;
-
         List<Movie> movieList = movieRepository.findMoviesByGenreId(genreId);
-        if (!movieList.isEmpty()) {
-            movieResponseDTOList = movieList.stream()
-                    .map(movieRowMapper::convertToDTO)
-                    .toList();
-        } else {
-            movieResponseDTOList = Collections.emptyList();
-        }
 
-        return movieResponseDTOList;
+        return convertToDtoList(movieList);
     }
 
     private Sort buildSortFromFilter(Map<String, String> filter) {

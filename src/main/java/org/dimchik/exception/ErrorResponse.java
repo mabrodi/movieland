@@ -12,12 +12,13 @@ import java.time.LocalDateTime;
 public class ErrorResponse {
     private int code;
     private String message;
-    private LocalDateTime timestamp;
+    private LocalDateTime localDateTime;
     private String path;
 
-    public ErrorResponse(int code, String message) {
+    public ErrorResponse(int code, String message, String path) {
         this.code = code;
         this.message = message;
-        this.timestamp = LocalDateTime.now();
+        this.path = path;
+        this.localDateTime = LocalDateTime.now();
     }
 }
