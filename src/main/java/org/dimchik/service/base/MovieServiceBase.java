@@ -4,7 +4,7 @@ import org.dimchik.dto.MovieResponseDTO;
 import org.dimchik.entity.Movie;
 import org.dimchik.exception.ResourceNotFoundException;
 import org.dimchik.repository.MovieRepository;
-import org.dimchik.mapper.MovieRowMapper;
+import org.dimchik.repository.mapper.MovieRowMapper;
 import org.dimchik.repository.specification.MovieSortSpecification;
 import org.dimchik.service.MovieService;
 import org.springframework.data.domain.Sort;

@@ -1,8 +1,9 @@
-package org.dimchik.mapper;
+package org.dimchik.repository.mapper;
 
 import org.dimchik.dto.MovieResponseDTO;
 import org.dimchik.entity.Movie;
 import org.dimchik.entity.Poster;
+import org.dimchik.repository.mapper.MovieRowMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
