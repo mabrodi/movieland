@@ -83,7 +83,6 @@ class MovieServiceBaseTest {
 
     @Test
     void findAllEmptyFilterShouldReturnsMoviesWithDefaultSort() {
-        HashMap<String, String> emptyFilter = new HashMap<>();
         List<Movie> movies = Arrays.asList(shawshank, godfather, darkKnight);
 
         when(movieRepository.findAll(any(Sort.class))).thenReturn(movies);
@@ -91,7 +90,7 @@ class MovieServiceBaseTest {
         when(movieRowMapper.convertToDTO(godfather)).thenReturn(godfatherDTO);
         when(movieRowMapper.convertToDTO(darkKnight)).thenReturn(darkKnightDTO);
 
-        List<MovieResponseDTO> result = movieService.findAll(emptyFilter);
+        List<MovieResponseDTO> result = movieService.findAll(null, null);
 
         assertThat(result).hasSize(3);
         assertThat(result).containsExactly(shawshankDTO, godfatherDTO, darkKnightDTO);
@@ -100,8 +99,6 @@ class MovieServiceBaseTest {
 
     @Test
     void findAllRatingFilterDescAppliesRatingSortDesc() {
-        HashMap<String, String> filter = new HashMap<>();
-        filter.put("rating", "desc");
         List<Movie> movies = Arrays.asList(shawshank, godfather, darkKnight);
 
         when(movieRepository.findAll(any(Sort.class))).thenReturn(movies);
@@ -110,7 +107,7 @@ class MovieServiceBaseTest {
                 .thenReturn(godfatherDTO)
                 .thenReturn(darkKnightDTO);
 
-        List<MovieResponseDTO> result = movieService.findAll(filter);
+        List<MovieResponseDTO> result = movieService.findAll("desc", null);
 
         assertThat(result).hasSize(3);
         verify(movieRepository).findAll(MovieSortSpecification.sortByRating("desc"));
@@ -118,8 +115,6 @@ class MovieServiceBaseTest {
 
     @Test
     void findAllPriceFilterAscAppliesPriceSortAsc() {
-        HashMap<String, String> filter = new HashMap<>();
-        filter.put("price", "asc");
         List<Movie> movies = Arrays.asList(shawshank, darkKnight, godfather);
 
         when(movieRepository.findAll(any(Sort.class))).thenReturn(movies);
@@ -128,7 +123,7 @@ class MovieServiceBaseTest {
                 .thenReturn(darkKnightDTO)
                 .thenReturn(godfatherDTO);
 
-        List<MovieResponseDTO> result = movieService.findAll(filter);
+        List<MovieResponseDTO> result = movieService.findAll(null, "asc");
 
         assertThat(result).hasSize(3);
         verify(movieRepository).findAll(MovieSortSpecification.sortByPrice("asc"));
@@ -200,10 +195,9 @@ class MovieServiceBaseTest {
 
     @Test
     void findAllNoMoviesShouldReturnsEmptyList() {
-        HashMap<String, String> filter = new HashMap<>();
         when(movieRepository.findAll(any(Sort.class))).thenReturn(Collections.emptyList());
 
-        List<MovieResponseDTO> result = movieService.findAll(filter);
+        List<MovieResponseDTO> result = movieService.findAll(null, null);
 
         assertThat(result).isEmpty();
         verify(movieRowMapper, never()).convertToDTO(any(Movie.class));
@@ -249,10 +243,6 @@ class MovieServiceBaseTest {
 
     @Test
     void findAllMultipleFiltersCombinesSorts() {
-        HashMap<String, String> filter = new HashMap<>();
-        filter.put("rating", "desc");
-        filter.put("price", "asc");
-
         List<Movie> movies = Arrays.asList(shawshank, godfather, darkKnight);
         when(movieRepository.findAll(any(Sort.class))).thenReturn(movies);
         when(movieRowMapper.convertToDTO(any(Movie.class)))
@@ -260,7 +250,7 @@ class MovieServiceBaseTest {
                 .thenReturn(godfatherDTO)
                 .thenReturn(darkKnightDTO);
 
-        List<MovieResponseDTO> result = movieService.findAll(filter);
+        List<MovieResponseDTO> result = movieService.findAll("desc", "asc");
 
         assertThat(result).hasSize(3);
         verify(movieRepository).findAll(any(Sort.class));

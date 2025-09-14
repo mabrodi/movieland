@@ -2,11 +2,10 @@ package org.dimchik.service;
 
 import org.dimchik.dto.MovieResponseDTO;
 
-import java.util.HashMap;
 import java.util.List;
 
 public interface MovieService {
-    List<MovieResponseDTO> findAll(HashMap<String, String> filter);
+    List<MovieResponseDTO> findAll(String rating, String price);
 
     List<MovieResponseDTO> random(int count);
 

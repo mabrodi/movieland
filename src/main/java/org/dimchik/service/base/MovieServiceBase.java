@@ -1,6 +1,5 @@
 package org.dimchik.service.base;
 
-import lombok.extern.slf4j.Slf4j;
 import org.dimchik.dto.MovieResponseDTO;
 import org.dimchik.entity.Movie;
 import org.dimchik.exception.ResourceNotFoundException;
@@ -13,7 +12,6 @@ import org.springframework.stereotype.Service;
 
 import java.util.*;
 
-@Slf4j
 @Service
 public class MovieServiceBase implements MovieService {
     private final MovieRepository movieRepository;
@@ -25,8 +23,8 @@ public class MovieServiceBase implements MovieService {
     }
 
     @Override
-    public List<MovieResponseDTO> findAll(HashMap<String, String> filter) {
-        Sort sort = buildSortFromFilter(filter);
+    public List<MovieResponseDTO> findAll(String rating, String price) {
+        Sort sort = buildSort(rating, price);
         List<Movie> movieList = movieRepository.findAll(sort);
 
         return convertToDtoList(movieList);
@@ -66,14 +64,14 @@ public class MovieServiceBase implements MovieService {
         return convertToDtoList(movieList);
     }
 
-    private Sort buildSortFromFilter(Map<String, String> filter) {
+    private Sort buildSort(String rating, String price) {
         Sort sort = Sort.unsorted();
 
-        if (filter.containsKey("rating")) {
-            sort = sort.and(MovieSortSpecification.sortByRating(filter.get("rating")));
+        if (rating != null && !rating.isBlank()) {
+            sort = sort.and(MovieSortSpecification.sortByRating(rating));
         }
-        if (filter.containsKey("price")) {
-            sort = sort.and(MovieSortSpecification.sortByPrice(filter.get("price")));
+        if (price != null && !price.isBlank()) {
+            sort = sort.and(MovieSortSpecification.sortByPrice(price));
         }
 
         return sort.isUnsorted() ? Sort.by("id").ascending() : sort;

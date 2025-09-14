@@ -43,14 +43,13 @@ class MovieControllerTest {
 
     @Test
     void findAllShouldReturnListMovies() {
-        HashMap<String, String> map = new HashMap<>();
         List<MovieResponseDTO> list = List.of(movieResponseDTO);
-        when(movieService.findAll(map)).thenReturn(list);
+        when(movieService.findAll(null, null)).thenReturn(list);
         ResponseEntity<List<MovieResponseDTO>> response = movieController.findAll(null, null);
 
         assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
         assertThat(response.getBody()).isEqualTo(list);
-        verify(movieService).findAll(map);
+        verify(movieService).findAll(null, null);
     }
 
     @Test
