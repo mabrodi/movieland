@@ -7,45 +7,38 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
 import java.util.List;
 
 @RestController
-@RequestMapping("api/v1/movies")
+@RequestMapping("api/v1/")
 @RequiredArgsConstructor
 public class MovieController {
     private final MovieService movieService;
 
-    @GetMapping
+    @GetMapping("/movies")
     public ResponseEntity<List<MovieResponseDTO>> findAll(
-            @RequestParam(required = false) String rating,
+            @RequestParam(defaultValue = "desc") String rating,
             @RequestParam(required = false) String price) {
-        HashMap<String, String> filter = new HashMap<>();
-        if (rating != null) {
-            filter.put("rating", rating);
-        }
-        if (price != null) {
-            filter.put("price", price);
-        }
-        List<MovieResponseDTO> movies = movieService.findAll(filter);
+
+        List<MovieResponseDTO> movies = movieService.findAll(rating, price);
 
         return new ResponseEntity<>(movies, HttpStatus.OK);
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("movie/{id}")
     public ResponseEntity<MovieResponseDTO> findById(@PathVariable long id) {
         MovieResponseDTO movieResponseDTO = movieService.findById(id);
         return new ResponseEntity<>(movieResponseDTO, HttpStatus.OK);
     }
 
-    @GetMapping("random")
+    @GetMapping("movies/random")
     public ResponseEntity<List<MovieResponseDTO>> random() {
         List<MovieResponseDTO> movies = movieService.random(3);
 
         return new ResponseEntity<>(movies, HttpStatus.OK);
     }
 
-    @GetMapping("genre/{genreId}")
+    @GetMapping("/movie/genre/{genreId}")
     public ResponseEntity<List<MovieResponseDTO>> findByGenreId(@PathVariable long genreId) {
         List<MovieResponseDTO> movies = movieService.findByGenreId(genreId);
 
