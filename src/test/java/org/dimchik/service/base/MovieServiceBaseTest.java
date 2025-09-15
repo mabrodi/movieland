@@ -4,7 +4,7 @@ import org.dimchik.dto.MovieResponseDTO;
 import org.dimchik.entity.Movie;
 import org.dimchik.entity.Poster;
 import org.dimchik.exception.ResourceNotFoundException;
-import org.dimchik.mapper.MovieRowMapper;
+import org.dimchik.repository.mapper.MovieRowMapper;
 import org.dimchik.repository.MovieRepository;
 import org.dimchik.repository.specification.MovieSortSpecification;
 import org.junit.jupiter.api.BeforeEach;
@@ -43,7 +43,6 @@ class MovieServiceBaseTest {
 
     @BeforeEach
     void setUp() {
-        // Setup test data с реальными данными как в вашем тесте маппера
         shawshank = createMovie(1L, "Побег из Шоушенка", "The Shawshank Redemption", 1994, 9.2, 120.2, "shawshank.jpg");
         godfather = createMovie(2L, "Крестный отец", "The Godfather", 1972, 9.1, 150.0, "godfather.jpg");
         darkKnight = createMovie(3L, "Темный рыцарь", "The Dark Knight", 2008, 9.0, 130.5, "darkknight.jpg");

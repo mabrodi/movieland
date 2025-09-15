@@ -1,4 +1,4 @@
-package org.dimchik.mapper;
+package org.dimchik.repository.mapper;
 
 import org.dimchik.dto.MovieResponseDTO;
 import org.dimchik.entity.Movie;
