@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class MovieResponseDTO {
+public class MovieDTO {
     private long id;
     private String nameRussian;
     private String nameNative;
