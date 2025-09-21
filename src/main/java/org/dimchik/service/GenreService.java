@@ -1,9 +1,9 @@
 package org.dimchik.service;
 
-import org.dimchik.dto.GenreResponseDTO;
+import org.dimchik.dto.GenreDTO;
 
 import java.util.List;
 
 public interface GenreService {
-    List<GenreResponseDTO> findAll();
+    List<GenreDTO> findAll();
 }
