@@ -1,11 +1,10 @@
-package org.dimchik.repository.cache;
+package org.dimchik.cache;
 
 import jakarta.annotation.PostConstruct;
-import jakarta.persistence.EntityManager;
-import jakarta.persistence.PersistenceContext;
 import lombok.extern.slf4j.Slf4j;
 import org.dimchik.dto.GenreDTO;
-import org.dimchik.entity.Genre;
+import org.dimchik.repository.GenreRepository;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
@@ -14,17 +13,17 @@ import java.util.List;
 
 @Slf4j
 @Component
-public class GenreCacheRepository {
-    private final EntityManager em;
+public class GenreCache {
+    private final GenreRepository genreRepository;
     private List<GenreDTO> list;
 
-    private GenreCacheRepository(EntityManager em) {
+    public GenreCache(GenreRepository genreRepository) {
         list = new ArrayList<>();
-        this.em = em;
+        this.genreRepository = genreRepository;
     }
 
     public List<GenreDTO> findAll() {
-        return list;
+        return new ArrayList<>(list);
     }
 
     @PostConstruct
@@ -36,9 +35,7 @@ public class GenreCacheRepository {
     @Scheduled(fixedDelayString = "${cache.genre-update-delay}")
     private void update() {
         try {
-            List<GenreDTO> newList = em.createQuery("from Genre", Genre.class)
-                    .getResultList()
-                    .stream()
+            List<GenreDTO> newList = genreRepository.findAll().stream()
                     .map(g -> new GenreDTO(g.getId(), g.getName()))
                     .toList();
             list = newList;
