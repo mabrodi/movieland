@@ -1,37 +1,20 @@
 package org.dimchik.service.base;
 
-import org.dimchik.dto.GenreResponseDTO;
-import org.dimchik.repository.GenreResponse;
+import lombok.RequiredArgsConstructor;
+import org.dimchik.dto.GenreDTO;
+import org.dimchik.repository.GenreRepository;
 import org.dimchik.service.GenreService;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class GenreServiceBase implements GenreService {
-    private final GenreResponse genreResponse;
-    private final List<GenreResponseDTO> list;
-
-    public GenreServiceBase(GenreResponse genreResponse) {
-        this.genreResponse = genreResponse;
-        this.list = new ArrayList<>();
-    }
+    private final GenreRepository genreRepository;
 
     @Override
-    public List<GenreResponseDTO> findAll() {
-        return list;
-    }
-
-    @Scheduled(fixedDelayString = "${spring.scheduled.genre}")
-    public void update() {
-        if (!list.isEmpty()) {
-            list.clear();
-        }
-
-        genreResponse.findAll().stream().map(
-                genre -> new GenreResponseDTO(genre.getId(), genre.getName())
-        ).forEach(list::add);
+    public List<GenreDTO> findAll() {
+        return genreRepository.findAllCached();
     }
 }

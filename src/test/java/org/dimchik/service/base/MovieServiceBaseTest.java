@@ -1,12 +1,23 @@
 package org.dimchik.service.base;
 
-import org.dimchik.dto.MovieResponseDTO;
+import org.dimchik.common.request.CreateMovieRequest;
+import org.dimchik.common.request.MovieByIdRequest;
+import org.dimchik.common.request.MovieRequest;
+import org.dimchik.common.request.UpdateMovieRequest;
+import org.dimchik.dto.MovieDTO;
+import org.dimchik.dto.MovieFullDTO;
+import org.dimchik.dto.RateDTO;
+import org.dimchik.entity.Country;
+import org.dimchik.entity.Genre;
 import org.dimchik.entity.Movie;
 import org.dimchik.entity.Poster;
-import org.dimchik.exception.ResourceNotFoundException;
+import org.dimchik.repository.CountryRepository;
+import org.dimchik.repository.GenreRepository;
+import org.dimchik.repository.PosterRepository;
+import org.dimchik.service.cache.RateCacheService;
+import org.dimchik.web.exception.ResourceNotFoundException;
 import org.dimchik.repository.mapper.MovieRowMapper;
 import org.dimchik.repository.MovieRepository;
-import org.dimchik.repository.specification.MovieSortSpecification;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -18,240 +29,252 @@ import org.springframework.data.domain.Sort;
 import java.util.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class MovieServiceBaseTest {
 
-    @Mock
-    private MovieRepository movieRepository;
-
-    @Mock
-    private MovieRowMapper movieRowMapper;
+    @Mock private MovieRepository movieRepository;
+    @Mock private GenreRepository genreRepository;
+    @Mock private CountryRepository countryRepository;
+    @Mock private PosterRepository posterRepository;
+    @Mock private MovieRowMapper movieRowMapper;
+    @Mock private RateCacheService rateCacheService;
 
     @InjectMocks
     private MovieServiceBase movieService;
 
-    private Movie shawshank;
-    private Movie godfather;
-    private Movie darkKnight;
-    private MovieResponseDTO shawshankDTO;
-    private MovieResponseDTO godfatherDTO;
-    private MovieResponseDTO darkKnightDTO;
+    private Movie movie1;
+    private Movie movie2;
+
+    private MovieDTO movieDTO1;
+    private MovieDTO movieDTO2;
+    private MovieFullDTO movieFullDTO;
 
     @BeforeEach
     void setUp() {
-        shawshank = createMovie(1L, "Побег из Шоушенка", "The Shawshank Redemption", 1994, 9.2, 120.2, "shawshank.jpg");
-        godfather = createMovie(2L, "Крестный отец", "The Godfather", 1972, 9.1, 150.0, "godfather.jpg");
-        darkKnight = createMovie(3L, "Темный рыцарь", "The Dark Knight", 2008, 9.0, 130.5, "darkknight.jpg");
-
-        shawshankDTO = createMovieDTO(1L, "Побег из Шоушенка", "The Shawshank Redemption", 1994, 9.2, 120.2, "shawshank.jpg");
-        godfatherDTO = createMovieDTO(2L, "Крестный отец", "The Godfather", 1972, 9.1, 150.0, "godfather.jpg");
-        darkKnightDTO = createMovieDTO(3L, "Темный рыцарь", "The Dark Knight", 2008, 9.0, 130.5, "darkknight.jpg");
-    }
-
-    private Movie createMovie(Long id, String nameRussian, String nameNative, int year, double rating, double price, String picturePath) {
-        Movie movie = new Movie();
-        movie.setId(id);
-        movie.setNameRussian(nameRussian);
-        movie.setNameNative(nameNative);
-        movie.setYearOfRelease(year);
-        movie.setRating(rating);
-        movie.setPrice(price);
-
         Poster poster = new Poster();
-        poster.setPicturePath(picturePath);
-        movie.setPoster(poster);
+        poster.setPicturePath("shawshank.jpg");
 
-        return movie;
-    }
+        movie1 = Movie.builder().id(1L)
+                .nameRussian("Побег из Шоушенка")
+                .nameNative("The Shawshank Redemption")
+                .yearOfRelease(1994)
+                .rating(9.2)
+                .price(120.4)
+                .poster(poster)
+                .build();
 
-    private MovieResponseDTO createMovieDTO(Long id, String nameRussian, String nameNative, int year, double rating, double price, String picturePath) {
-        return MovieResponseDTO.builder()
-                .id(id)
-                .nameRussian(nameRussian)
-                .nameNative(nameNative)
-                .yearOfRelease(year)
-                .rating(rating)
-                .price(price)
-                .picturePath(picturePath)
+        movie2 = Movie.builder().id(2L)
+                .nameRussian("Крестный отец")
+                .nameNative("The Godfather")
+                .yearOfRelease(1972)
+                .rating(9.1)
+                .price(150.4)
+                .poster(poster)
+                .build();
+
+        movieDTO1 = MovieDTO.builder()
+                .id(1L)
+                .nameRussian("Побег из Шоушенка")
+                .nameNative("The Shawshank Redemption")
+                .yearOfRelease(1994)
+                .rating(9.2)
+                .price(120.4)
+                .picturePath("shawshank.jpg")
+                .build();
+
+        movieDTO2 = MovieDTO.builder()
+                .id(2L)
+                .nameRussian("Крестный отец")
+                .nameNative("The Godfather")
+                .yearOfRelease(1972)
+                .rating(9.1)
+                .price(150.4)
+                .picturePath("shawshank.jpg")
+                .build();
+
+        movieFullDTO = MovieFullDTO.builder()
+                .id(1L)
+                .nameRussian("Побег из Шоушенка")
+                .nameNative("The Shawshank Redemption")
+                .rating(9.2)
+                .price(100.0)
+                .picturePath("shawshank.jpg")
                 .build();
     }
 
     @Test
-    void findAllEmptyFilterShouldReturnsMoviesWithDefaultSort() {
-        List<Movie> movies = Arrays.asList(shawshank, godfather, darkKnight);
+    void findAllEmptyFilterShouldReturnMoviesWithDefaultSort() {
 
+        List<Movie> movies = Arrays.asList(movie1, movie2);
         when(movieRepository.findAll(any(Sort.class))).thenReturn(movies);
-        when(movieRowMapper.convertToDTO(shawshank)).thenReturn(shawshankDTO);
-        when(movieRowMapper.convertToDTO(godfather)).thenReturn(godfatherDTO);
-        when(movieRowMapper.convertToDTO(darkKnight)).thenReturn(darkKnightDTO);
 
-        List<MovieResponseDTO> result = movieService.findAll(null, null);
+        when(movieRowMapper.convertToDTO(movie1)).thenReturn(movieDTO1);
+        when(movieRowMapper.convertToDTO(movie2)).thenReturn(movieDTO2);
 
-        assertThat(result).hasSize(3);
-        assertThat(result).containsExactly(shawshankDTO, godfatherDTO, darkKnightDTO);
-        verify(movieRowMapper, times(3)).convertToDTO(any(Movie.class));
-    }
-
-    @Test
-    void findAllRatingFilterDescAppliesRatingSortDesc() {
-        List<Movie> movies = Arrays.asList(shawshank, godfather, darkKnight);
-
-        when(movieRepository.findAll(any(Sort.class))).thenReturn(movies);
-        when(movieRowMapper.convertToDTO(any(Movie.class)))
-                .thenReturn(shawshankDTO)
-                .thenReturn(godfatherDTO)
-                .thenReturn(darkKnightDTO);
-
-        List<MovieResponseDTO> result = movieService.findAll("desc", null);
-
-        assertThat(result).hasSize(3);
-        verify(movieRepository).findAll(MovieSortSpecification.sortByRating("desc"));
-    }
-
-    @Test
-    void findAllPriceFilterAscAppliesPriceSortAsc() {
-        List<Movie> movies = Arrays.asList(shawshank, darkKnight, godfather);
-
-        when(movieRepository.findAll(any(Sort.class))).thenReturn(movies);
-        when(movieRowMapper.convertToDTO(any(Movie.class)))
-                .thenReturn(shawshankDTO)
-                .thenReturn(darkKnightDTO)
-                .thenReturn(godfatherDTO);
-
-        List<MovieResponseDTO> result = movieService.findAll(null, "asc");
-
-        assertThat(result).hasSize(3);
-        verify(movieRepository).findAll(MovieSortSpecification.sortByPrice("asc"));
-    }
-
-    @Test
-    void randomValidCountShouldReturnsRandomMovies() {
-        int count = 2;
-        List<Movie> allMovies = Arrays.asList(shawshank, godfather, darkKnight);
-
-        when(movieRepository.findAll()).thenReturn(allMovies);
-
-        List<MovieResponseDTO> result = movieService.random(count);
-
-        assertThat(result).hasSize(count);
-        verify(movieRepository).findAll();
-        verify(movieRowMapper, times(count)).convertToDTO(any(Movie.class));
-    }
-
-    @Test
-    void findByIdShouldReturnsMovie() {
-        long movieId = 1L;
-        when(movieRepository.findById(movieId)).thenReturn(Optional.of(shawshank));
-        when(movieRowMapper.convertToDTO(shawshank)).thenReturn(shawshankDTO);
-
-        MovieResponseDTO result = movieService.findById(movieId);
-
-        assertThat(result).isEqualTo(shawshankDTO);
-        assertEquals("Побег из Шоушенка", result.getNameRussian());
-        assertEquals("The Shawshank Redemption", result.getNameNative());
-        assertEquals(1994, result.getYearOfRelease());
-        assertEquals(9.2, result.getRating());
-        assertEquals(120.2, result.getPrice());
-        assertEquals("shawshank.jpg", result.getPicturePath());
-
-        verify(movieRepository).findById(movieId);
-        verify(movieRowMapper).convertToDTO(shawshank);
-    }
-
-    @Test
-    void findByIdThrowsResourceNotFoundException() {
-        long movieId = 999L;
-        when(movieRepository.findById(movieId)).thenReturn(Optional.empty());
-
-        ResourceNotFoundException exception = assertThrows(ResourceNotFoundException.class,
-                () -> movieService.findById(movieId));
-
-        assertThat(exception.getMessage()).contains("Movie not found with id: " + movieId);
-        verify(movieRepository).findById(movieId);
-        verify(movieRowMapper, never()).convertToDTO(any(Movie.class));
-    }
-
-    @Test
-    void findByGenreIdShouldReturnsMovies() {
-        long genreId = 1L;
-        List<Movie> movies = Arrays.asList(shawshank, godfather);
-
-        when(movieRepository.findMoviesByGenreId(genreId)).thenReturn(movies);
-        when(movieRowMapper.convertToDTO(shawshank)).thenReturn(shawshankDTO);
-        when(movieRowMapper.convertToDTO(godfather)).thenReturn(godfatherDTO);
-
-        List<MovieResponseDTO> result = movieService.findByGenreId(genreId);
+        List<MovieDTO> result = movieService.findAll(new MovieRequest());
 
         assertThat(result).hasSize(2);
-        assertThat(result).containsExactly(shawshankDTO, godfatherDTO);
-        verify(movieRepository).findMoviesByGenreId(genreId);
-        verify(movieRowMapper, times(2)).convertToDTO(any(Movie.class));
+        assertThat(result).containsExactly(movieDTO1, movieDTO2);
+    }
+
+
+    @Test
+    void randomShouldReturnLimitedListWhenMoviesExist() {
+        when(movieRepository.findAll()).thenReturn(Arrays.asList(movie1, movie2));
+        when(movieRowMapper.convertToDTO(any(Movie.class)))
+                .thenReturn(movieDTO1, movieDTO2);
+
+        List<MovieDTO> result = movieService.random(1);
+
+        assertThat(result).hasSize(1);
+        verify(movieRepository).findAll();
     }
 
     @Test
-    void findAllNoMoviesShouldReturnsEmptyList() {
-        when(movieRepository.findAll(any(Sort.class))).thenReturn(Collections.emptyList());
-
-        List<MovieResponseDTO> result = movieService.findAll(null, null);
-
-        assertThat(result).isEmpty();
-        verify(movieRowMapper, never()).convertToDTO(any(Movie.class));
-    }
-
-    @Test
-    void randomNoMoviesShouldReturnsEmptyList() {
-        int count = 3;
+    void randomShouldReturnEmptyListWhenRepositoryEmpty() {
         when(movieRepository.findAll()).thenReturn(Collections.emptyList());
 
-        List<MovieResponseDTO> result = movieService.random(count);
+        List<MovieDTO> result = movieService.random(2);
 
         assertThat(result).isEmpty();
-        verify(movieRowMapper, never()).convertToDTO(any(Movie.class));
+        verify(movieRepository).findAll();
     }
 
     @Test
-    void findByGenreIdNoMoviesForGenreShouldReturnsEmptyList() {
-        long genreId = 999L;
-        when(movieRepository.findMoviesByGenreId(genreId)).thenReturn(Collections.emptyList());
+    void findByIdShouldReturnMovieFullDTOWhenCurrencyIsUAH() {
+        MovieByIdRequest request = new MovieByIdRequest();
+        request.setCurrency(org.dimchik.common.enums.Currency.UAH);
 
-        List<MovieResponseDTO> result = movieService.findByGenreId(genreId);
+        when(movieRepository.findById(1L)).thenReturn(Optional.of(movie1));
+        when(movieRowMapper.convertToFullDTO(movie1)).thenReturn(movieFullDTO);
+
+        MovieFullDTO result = movieService.findById(1L, request);
+
+        assertThat(result.getPrice()).isEqualTo(100.0);
+        verify(rateCacheService, never()).findAll();
+    }
+
+    @Test
+    void findByIdShouldConvertPriceWhenCurrencyIsUSD() {
+        MovieByIdRequest request = new MovieByIdRequest();
+        request.setCurrency(org.dimchik.common.enums.Currency.USD);
+
+        when(movieRepository.findById(1L)).thenReturn(Optional.of(movie1));
+        when(movieRowMapper.convertToFullDTO(movie1)).thenReturn(movieFullDTO);
+        when(rateCacheService.findAll()).thenReturn(List.of(new RateDTO(1L, "Долар США", "USD", 50)));
+
+        MovieFullDTO result = movieService.findById(1L, request);
+
+        assertThat(result.getPrice()).isEqualTo(5000);
+        verify(rateCacheService).findAll();
+    }
+
+    @Test
+    void findByIdShouldThrowExceptionWhenMovieNotFound() {
+        MovieByIdRequest request = new MovieByIdRequest();
+        when(movieRepository.findById(1L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> movieService.findById(1L, request))
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("Movie not found with id: 1");
+    }
+
+    @Test
+    void findByGenreIdShouldReturnMappedDTOs() {
+        when(movieRepository.findMoviesByGenreId(10L))
+                .thenReturn(Arrays.asList(movie1, movie2));
+        when(movieRowMapper.convertToDTO(movie1)).thenReturn(movieDTO1);
+        when(movieRowMapper.convertToDTO(movie2)).thenReturn(movieDTO2);
+
+        List<MovieDTO> result = movieService.findByGenreId(10L);
+
+        assertThat(result).containsExactly(movieDTO1, movieDTO2);
+        verify(movieRepository).findMoviesByGenreId(10L);
+    }
+
+    @Test
+    void findByGenreIdShouldReturnEmptyListWhenNoMovies() {
+        when(movieRepository.findMoviesByGenreId(anyLong())).thenReturn(Collections.emptyList());
+
+        List<MovieDTO> result = movieService.findByGenreId(99L);
 
         assertThat(result).isEmpty();
-        verify(movieRepository).findMoviesByGenreId(genreId);
-        verify(movieRowMapper, never()).convertToDTO(any(Movie.class));
     }
 
     @Test
-    void randomCountShouldReturnsAllMovies() {
-        int count = 5;
-        List<Movie> movies = Arrays.asList(shawshank, godfather);
+    void createShouldSaveMovieWithPosterAndRelations() {
 
-        when(movieRepository.findAll()).thenReturn(movies);
-        when(movieRowMapper.convertToDTO(shawshank)).thenReturn(shawshankDTO);
-        when(movieRowMapper.convertToDTO(godfather)).thenReturn(godfatherDTO);
+        CreateMovieRequest request = new CreateMovieRequest();
+        request.setNameRussian("Побег из Шоушенка");
+        request.setNameNative("The Shawshank Redemption");
+        request.setYearOfRelease(1994);
+        request.setDescription("Фильм о надежде и свободе");
+        request.setPrice(100.0);
+        request.setRating(9.3);
+        request.setPicturePath("poster.jpg");
+        request.setCountries(List.of(1L));
+        request.setGenres(List.of(2L));
 
-        List<MovieResponseDTO> result = movieService.random(count);
+        Genre genre = new Genre();
+        genre.setId(2L);
+        Country country = new Country();
+        country.setId(1L);
 
-        assertThat(result).hasSize(2);
-        verify(movieRowMapper, times(2)).convertToDTO(any(Movie.class));
+        Movie movie = new Movie();
+        movie.setId(1L);
+        movie.setNameRussian("Побег из Шоушенка");
+
+        when(movieRowMapper.convertCreateMovieRequestToMovie(any(CreateMovieRequest.class))).thenReturn(movie);
+        when(genreRepository.findById(2L)).thenReturn(Optional.of(genre));
+        when(countryRepository.findById(1L)).thenReturn(Optional.of(country));
+        when(movieRepository.save(any(Movie.class))).thenReturn(movie);
+        when(movieRowMapper.convertToFullDTO(any(Movie.class))).thenReturn(movieFullDTO);
+
+        MovieFullDTO result = movieService.create(request);
+
+        assertThat(result.getId()).isEqualTo(1L);
+        verify(genreRepository).findById(2L);
+        verify(countryRepository).findById(1L);
+        verify(movieRepository).save(any(Movie.class));
+        verify(posterRepository).save(any(Poster.class));
     }
 
     @Test
-    void findAllMultipleFiltersCombinesSorts() {
-        List<Movie> movies = Arrays.asList(shawshank, godfather, darkKnight);
-        when(movieRepository.findAll(any(Sort.class))).thenReturn(movies);
-        when(movieRowMapper.convertToDTO(any(Movie.class)))
-                .thenReturn(shawshankDTO)
-                .thenReturn(godfatherDTO)
-                .thenReturn(darkKnightDTO);
+    void updateShouldModifyExistingMovie() {
 
-        List<MovieResponseDTO> result = movieService.findAll("desc", "asc");
+        UpdateMovieRequest request = new UpdateMovieRequest();
+        request.setNameRussian("Обновленное название");
+        request.setPicturePath("updatedPoster.jpg");
+        request.setCountries(List.of(3L));
+        request.setGenres(List.of(4L));
 
-        assertThat(result).hasSize(3);
-        verify(movieRepository).findAll(any(Sort.class));
+        Genre genre = new Genre();
+        genre.setId(4L);
+        Country country = new Country();
+        country.setId(3L);
+
+        Movie movie = new Movie();
+        movie.setId(1L);
+        movie.setNameRussian("Побег из Шоушенка");
+
+        Poster poster = new Poster();
+        poster.setPicturePath("oldPoster.jpg");
+        movie.setPoster(poster);
+
+        when(movieRepository.findById(1L)).thenReturn(Optional.of(movie));
+        when(genreRepository.findById(4L)).thenReturn(Optional.of(genre));
+        when(countryRepository.findById(3L)).thenReturn(Optional.of(country));
+        when(movieRepository.save(any(Movie.class))).thenReturn(movie);
+        when(movieRowMapper.convertToFullDTO(any(Movie.class))).thenReturn(movieFullDTO);
+
+        MovieFullDTO result = movieService.update(1L, request);
+
+        assertThat(result.getId()).isEqualTo(1L);
+        verify(posterRepository).save(any(Poster.class));
+        verify(movieRepository).save(movie);
     }
 }

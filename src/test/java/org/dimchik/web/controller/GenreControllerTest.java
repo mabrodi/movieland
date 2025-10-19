@@ -1,38 +1,56 @@
 package org.dimchik.web.controller;
 
-import org.dimchik.dto.GenreResponseDTO;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.dimchik.dto.GenreDTO;
 import org.dimchik.service.GenreService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
-import java.util.Arrays;
+import java.io.File;
+import java.nio.file.Files;
 import java.util.List;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 
-@ExtendWith(MockitoExtension.class)
+@ExtendWith(SpringExtension.class)
 class GenreControllerTest {
+    private static final String ROUTES_API_URL = "/api/v1/genre";
+
+    private MockMvc mockMvc;
+
     @Mock
-    GenreService genreService;
+    private GenreService genreService;
+
+    private List<GenreDTO> expectedGenres;
+    private String expectedJson;
+
+    @BeforeEach
+    void setUp() throws Exception {
+        mockMvc = MockMvcBuilders.standaloneSetup(new GenreController(genreService)).build();
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        File jsonFile = new ClassPathResource("genreList.json").getFile();
+        expectedJson = Files.readString(jsonFile.toPath());
+        expectedGenres = objectMapper.readValue(expectedJson, new TypeReference<>() {});
+    }
 
     @Test
-    void findAllShouldReturnListOfGenres() {
-        GenreResponseDTO genreResponseDTO = new GenreResponseDTO(1L, "Test");
-        List<GenreResponseDTO> list = List.of(genreResponseDTO);
-        when(genreService.findAll()).thenReturn(list);
+    void findAllReturnCorrectJson() throws Exception {
+        when(genreService.findAll()).thenReturn(expectedGenres);
 
-        GenreController genreController = new GenreController(genreService);
-        ResponseEntity<List<GenreResponseDTO>> response = genreController.findAll();
-
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).isEqualTo(list);
-        verify(genreService).findAll();
+        mockMvc.perform(get(ROUTES_API_URL).contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().json(expectedJson));
     }
 }

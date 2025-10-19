@@ -7,7 +7,7 @@ import lombok.NoArgsConstructor;
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class GenreResponseDTO {
+public class UserDTO {
     private long id;
     private String name;
 }

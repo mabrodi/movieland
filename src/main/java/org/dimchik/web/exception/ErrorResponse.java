@@ -1,4 +1,4 @@
-package org.dimchik.exception;
+package org.dimchik.web.exception;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

@@ -1,15 +1,24 @@
 package org.dimchik.service;
 
-import org.dimchik.dto.MovieResponseDTO;
+import org.dimchik.common.request.CreateMovieRequest;
+import org.dimchik.common.request.MovieByIdRequest;
+import org.dimchik.common.request.MovieRequest;
+import org.dimchik.common.request.UpdateMovieRequest;
+import org.dimchik.dto.MovieDTO;
+import org.dimchik.dto.MovieFullDTO;
 
 import java.util.List;
 
 public interface MovieService {
-    List<MovieResponseDTO> findAll(String rating, String price);
+    List<MovieDTO> findAll(MovieRequest request);
 
-    List<MovieResponseDTO> random(int count);
+    List<MovieDTO> random(int count);
 
-    MovieResponseDTO findById(long id);
+    MovieFullDTO findById(long id, MovieByIdRequest request);
 
-    List<MovieResponseDTO> findByGenreId(long genreId);
+    List<MovieDTO> findByGenreId(long genreId);
+
+    MovieFullDTO create(CreateMovieRequest request);
+
+    MovieFullDTO update(long id, UpdateMovieRequest request);
 }

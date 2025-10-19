@@ -1,0 +1,227 @@
+[
+    {
+        "id": 1,
+        "nameRussian": "Побег из Шоушенка",
+        "nameNative": "The Shawshank Redemption",
+        "yearOfRelease": 1994,
+        "rating": 8.9,
+        "price": 123.45,
+        "picturePath": "https://images-na.ssl-images-amazon.com/images/M/MV5BODU4MjU4NjIwNl5BMl5BanBnXkFtZTgwMDU2MjEyMDE@._V1._SY209_CR0,0,140,209_.jpg"
+    },
+    {
+        "id": 2,
+        "nameRussian": "Зеленая миля",
+        "nameNative": "The Green Mile",
+        "yearOfRelease": 1999,
+        "rating": 8.9,
+        "price": 134.67,
+        "picturePath": "https://images-na.ssl-images-amazon.com/images/M/MV5BMTUxMzQyNjA5MF5BMl5BanBnXkFtZTYwOTU2NTY3._V1._SY209_CR0,0,140,209_.jpg"
+    },
+    {
+        "id": 4,
+        "nameRussian": "Список Шиндлера",
+        "nameNative": "Schindler's List",
+        "yearOfRelease": 1993,
+        "rating": 8.7,
+        "price": 150.5,
+        "picturePath": "https://images-na.ssl-images-amazon.com/images/M/MV5BNDE4OTMxMTctNmRhYy00NWE2LTg3YzItYTk3M2UwOTU5Njg4XkEyXkFqcGdeQXVyNjU0OTQ0OTY@._V1._SX140_CR0,0,140,209_.jpg"
+    },
+    {
+        "id": 13,
+        "nameRussian": "Пролетая над гнездом кукушки",
+        "nameNative": "One Flew Over the Cuckoo's Nest",
+        "yearOfRelease": 1975,
+        "rating": 8.7,
+        "price": 180.0,
+        "picturePath": "https://images-na.ssl-images-amazon.com/images/M/MV5BZjA0OWVhOTAtYWQxNi00YzNhLWI4ZjYtNjFjZTEyYjJlNDVlL2ltYWdlL2ltYWdlXkEyXkFqcGdeQXVyMTQxNzMzNDI@._V1._SY209_CR0,0,140,209_.jpg"
+    },
+    {
+        "id": 6,
+        "nameRussian": "Начало",
+        "nameNative": "Inception",
+        "yearOfRelease": 2010,
+        "rating": 8.6,
+        "price": 130.0,
+        "picturePath": "https://images-na.ssl-images-amazon.com/images/M/MV5BMjAxMzY3NjcxNF5BMl5BanBnXkFtZTcwNTI5OTM0Mw@@._V1._SY209_CR0,0,140,209_.jpg"
+    },
+    {
+        "id": 11,
+        "nameRussian": "Унесённые призраками",
+        "nameNative": "Sen to Chihiro no kamikakushi",
+        "yearOfRelease": 2001,
+        "rating": 8.6,
+        "price": 145.9,
+        "picturePath": "https://images-na.ssl-images-amazon.com/images/M/MV5BOGJjNzZmMmUtMjljNC00ZjU5LWJiODQtZmEzZTU0MjBlNzgxL2ltYWdlXkEyXkFqcGdeQXVyNTAyODkwOQ@@._V1._SY209_CR0,0,140,209_.jpg"
+    },
+    {
+        "id": 15,
+        "nameRussian": "Гладиатор",
+        "nameNative": "Gladiator",
+        "yearOfRelease": 2000,
+        "rating": 8.6,
+        "price": 175.0,
+        "picturePath": "https://images-na.ssl-images-amazon.com/images/M/MV5BMDliMmNhNDEtODUyOS00MjNlLTgxODEtN2U3NzIxMGVkZTA1L2ltYWdlXkEyXkFqcGdeQXVyNjU0OTQ0OTY@._V1._SY209_CR0,0,140,209_.jpg"
+    },
+    {
+        "id": 3,
+        "nameRussian": "Форрест Гамп",
+        "nameNative": "Forrest Gump",
+        "yearOfRelease": 1994,
+        "rating": 8.6,
+        "price": 200.6,
+        "picturePath": "https://images-na.ssl-images-amazon.com/images/M/MV5BNWIwODRlZTUtY2U3ZS00Yzg1LWJhNzYtMmZiYmEyNmU1NjMzXkEyXkFqcGdeQXVyMTQxNzMzNDI@._V1._SY209_CR2,0,140,209_.jpg"
+    },
+    {
+        "id": 21,
+        "nameRussian": "Хороший, плохой, злой",
+        "nameNative": "Il buono, il brutto, il cattivo",
+        "yearOfRelease": 1979,
+        "rating": 8.5,
+        "price": 130.0,
+        "picturePath": "https://images-na.ssl-images-amazon.com/images/M/MV5BOTQ5NDI3MTI4MF5BMl5BanBnXkFtZTgwNDQ4ODE5MDE@._V1._SX140_CR0,0,140,209_.jpg"
+    },
+    {
+        "id": 16,
+        "nameRussian": "Большой куш",
+        "nameNative": "Snatch",
+        "yearOfRelease": 2000,
+        "rating": 8.5,
+        "price": 160.0,
+        "picturePath": "https://images-na.ssl-images-amazon.com/images/M/MV5BMTA2NDYxOGYtYjU1Mi00Y2QzLTgxMTQtMWI1MGI0ZGQ5MmU4XkEyXkFqcGdeQXVyNDk3NzU2MTQ@._V1._SY209_CR1,0,140,209_.jpg"
+    },
+    {
+        "id": 24,
+        "nameRussian": "Джанго освобожденный",
+        "nameNative": "Django Unchained",
+        "yearOfRelease": 2012,
+        "rating": 8.5,
+        "price": 170.0,
+        "picturePath": "https://images-na.ssl-images-amazon.com/images/M/MV5BMjIyNTQ5NjQ1OV5BMl5BanBnXkFtZTcwODg1MDU4OA@@._V1._SY209_CR0,0,140,209_.jpg"
+    },
+    {
+        "id": 17,
+        "nameRussian": "Темный рыцарь",
+        "nameNative": "The Dark Knight",
+        "yearOfRelease": 2008,
+        "rating": 8.5,
+        "price": 199.99,
+        "picturePath": "https://images-na.ssl-images-amazon.com/images/M/MV5BMTMxNTMwODM0NF5BMl5BanBnXkFtZTcwODAyMTk2Mw@@._V1._SY209_CR0,0,140,209_.jpg"
+    },
+    {
+        "id": 8,
+        "nameRussian": "Бойцовский клуб",
+        "nameNative": "Fight Club",
+        "yearOfRelease": 1999,
+        "rating": 8.4,
+        "price": 119.99,
+        "picturePath": "https://images-na.ssl-images-amazon.com/images/M/MV5BZGY5Y2RjMmItNDg5Yy00NjUwLThjMTEtNDc2OGUzNTBiYmM1XkEyXkFqcGdeQXVyNjU0OTQ0OTY@._V1._SY209_CR0,0,140,209_.jpg"
+    },
+    {
+        "id": 5,
+        "nameRussian": "1+1",
+        "nameNative": "Intouchables",
+        "yearOfRelease": 2011,
+        "rating": 8.3,
+        "price": 120.0,
+        "picturePath": "https://images-na.ssl-images-amazon.com/images/M/MV5BMTYxNDA3MDQwNl5BMl5BanBnXkFtZTcwNTU4Mzc1Nw@@._V1._SY209_CR0,0,140,209_.jpg"
+    },
+    {
+        "id": 19,
+        "nameRussian": "Молчание ягнят",
+        "nameNative": "The Silence of the Lambs",
+        "yearOfRelease": 1990,
+        "rating": 8.3,
+        "price": 150.5,
+        "picturePath": "https://images-na.ssl-images-amazon.com/images/M/MV5BNjNhZTk0ZmEtNjJhMi00YzFlLWE1MmEtYzM1M2ZmMGMwMTU4XkEyXkFqcGdeQXVyNjU0OTQ0OTY@._V1._SY209_CR1,0,140,209_.jpg"
+    },
+    {
+        "id": 14,
+        "nameRussian": "Ходячий замок",
+        "nameNative": "Hauru no ugoku shiro",
+        "yearOfRelease": 2004,
+        "rating": 8.2,
+        "price": 130.5,
+        "picturePath": "https://images-na.ssl-images-amazon.com/images/M/MV5BZTRhY2QwM2UtNWRlNy00ZWQwLTg3MjktZThmNjQ3NTdjN2IxXkEyXkFqcGdeQXVyMzg2MzE2OTE@._V1._SY209_CR5,0,140,209_.jpg"
+    },
+    {
+        "id": 7,
+        "nameRussian": "Жизнь прекрасна",
+        "nameNative": "La vita è bella",
+        "yearOfRelease": 1997,
+        "rating": 8.2,
+        "price": 145.99,
+        "picturePath": "https://images-na.ssl-images-amazon.com/images/M/MV5BYmJmM2Q4NmMtYThmNC00ZjRlLWEyZmItZTIwOTBlZDQ3NTQ1XkEyXkFqcGdeQXVyMTQxNzMzNDI@._V1._SY209_CR0,0,140,209_.jpg"
+    },
+    {
+        "id": 18,
+        "nameRussian": "Как приручить дракона",
+        "nameNative": "How to Train Your Dragon",
+        "yearOfRelease": 2010,
+        "rating": 8.2,
+        "price": 182.0,
+        "picturePath": "https://images-na.ssl-images-amazon.com/images/M/MV5BMjA5NDQyMjc2NF5BMl5BanBnXkFtZTcwMjg5ODcyMw@@._V1._SY209_CR0,0,140,209_.jpg"
+    },
+    {
+        "id": 10,
+        "nameRussian": "Звёздные войны: Эпизод 5 – Империя наносит ответный удар",
+        "nameNative": "Star Wars: Episode V - The Empire Strikes Back",
+        "yearOfRelease": 1980,
+        "rating": 8.2,
+        "price": 198.98,
+        "picturePath": "https://images-na.ssl-images-amazon.com/images/M/MV5BYmViY2M2MTYtY2MzOS00YjQ1LWIzYmEtOTBiNjhlMGM0NjZjXkEyXkFqcGdeQXVyNDYyMDk5MTU@._V1._SX140_CR0,0,140,209_.jpg"
+    },
+    {
+        "id": 20,
+        "nameRussian": "Гран Торино",
+        "nameNative": "Gran Torino",
+        "yearOfRelease": 2008,
+        "rating": 8.1,
+        "price": 100.5,
+        "picturePath": "https://images-na.ssl-images-amazon.com/images/M/MV5BMTc5NTk2OTU1Nl5BMl5BanBnXkFtZTcwMDc3NjAwMg@@._V1._SY209_CR0,0,140,209_.jpg"
+    },
+    {
+        "id": 9,
+        "nameRussian": "Звёздные войны: Эпизод 4 – Новая надежда",
+        "nameNative": "Star Wars",
+        "yearOfRelease": 1977,
+        "rating": 8.1,
+        "price": 198.98,
+        "picturePath": "https://images-na.ssl-images-amazon.com/images/M/MV5BYTUwNTdiMzMtNThmNS00ODUzLThlMDMtMTM5Y2JkNWJjOGQ2XkEyXkFqcGdeQXVyNzQ1ODk3MTQ@._V1._SX140_CR0,0,140,209_.jpg"
+    },
+    {
+        "id": 25,
+        "nameRussian": "Танцующий с волками",
+        "nameNative": "Dances with Wolves",
+        "yearOfRelease": 1990,
+        "rating": 8.0,
+        "price": 120.55,
+        "picturePath": "https://images-na.ssl-images-amazon.com/images/M/MV5BMTY3OTI5NDczN15BMl5BanBnXkFtZTcwNDA0NDY3Mw@@._V1._SX140_CR0,0,140,209_.jpg"
+    },
+    {
+        "id": 12,
+        "nameRussian": "Титаник",
+        "nameNative": "Titanic",
+        "yearOfRelease": 1997,
+        "rating": 7.9,
+        "price": 150.0,
+        "picturePath": "https://images-na.ssl-images-amazon.com/images/M/MV5BMDdmZGU3NDQtY2E5My00ZTliLWIzOTUtMTY4ZGI1YjdiNjk3XkEyXkFqcGdeQXVyNTA4NzY1MzY@._V1._SY209_CR0,0,140,209_.jpg"
+    },
+    {
+        "id": 22,
+        "nameRussian": "Укрощение строптивого",
+        "nameNative": "Il bisbetico domato",
+        "yearOfRelease": 1980,
+        "rating": 7.7,
+        "price": 120.0,
+        "picturePath": "https://images-na.ssl-images-amazon.com/images/M/MV5BMTc5NTM5OTY0Nl5BMl5BanBnXkFtZTcwNjg1MjcyMQ@@._V1._SY209_CR3,0,140,209_.jpg"
+    },
+    {
+        "id": 23,
+        "nameRussian": "Блеф",
+        "nameNative": "Bluff storia di truffe e di imbroglioni",
+        "yearOfRelease": 1976,
+        "rating": 7.6,
+        "price": 100.0,
+        "picturePath": "https://images-na.ssl-images-amazon.com/images/M/MV5BMjk5YmMxMjMtMTlkNi00YTI5LThhYTMtOTk2NmNiNzQwMzI0XkEyXkFqcGdeQXVyMTQ3Njg3MQ@@._V1._SX140_CR0,0,140,209_.jpg"
+    }
+]

@@ -1,16 +1,15 @@
 package org.dimchik.entity;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
+import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Set;
 
-@Getter
-@Setter
+@Builder
+@Data
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor
@@ -41,32 +40,27 @@ public class Movie {
     @Column(name = "created_at", insertable = false, updatable = false)
     private LocalDateTime createdAt;
 
+    @UpdateTimestamp
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
-    @OneToOne(mappedBy = "movie", fetch = FetchType.LAZY)
+    @OneToOne(mappedBy = "movie")
     private Poster poster;
 
     @OneToMany(mappedBy = "movie", fetch = FetchType.LAZY)
-    private Set<Review> reviews;
+    private List<Review> reviews;
 
     @ManyToMany
     @JoinTable(
             name = "movie_countries",
             joinColumns = @JoinColumn(name = "movie_id"),
             inverseJoinColumns = @JoinColumn(name = "country_id"))
-    private Set<Country> countries;
+    private List<Country> countries;
 
     @ManyToMany
     @JoinTable(
             name = "movie_genres",
             joinColumns = @JoinColumn(name = "movie_id"),
             inverseJoinColumns = @JoinColumn(name = "genre_id"))
-    private Set<Genre> genres;
-
-    @PreUpdate
-    public void onUpdate() {
-        this.updatedAt = LocalDateTime.now();
-    }
-
+    private List<Genre> genres;
 }
