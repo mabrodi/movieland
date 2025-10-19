@@ -1,17 +1,19 @@
 package org.dimchik.repository.custom;
 
-import lombok.AllArgsConstructor;
-import org.dimchik.cache.GenreCache;
+import org.dimchik.service.cache.GenreCacheService;
 import org.dimchik.dto.GenreDTO;
 
 import java.util.List;
 
-@AllArgsConstructor
 public class GenreRepositoryCustomImpl implements GenreRepositoryCustom {
-    private final GenreCache provider;
+    private final GenreCacheService genreCache;
+
+    public GenreRepositoryCustomImpl(GenreCacheService genreCache) {
+        this.genreCache = genreCache;
+    }
 
     @Override
     public List<GenreDTO> findAllCached() {
-        return provider.findAll();
+        return genreCache.findAll();
     }
 }

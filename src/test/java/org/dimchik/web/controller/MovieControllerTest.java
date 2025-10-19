@@ -1,86 +1,125 @@
 package org.dimchik.web.controller;
 
-import org.assertj.core.util.Maps;
-import org.dimchik.dto.MovieResponseDTO;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import org.dimchik.common.request.CreateMovieRequest;
+import org.dimchik.common.request.MovieByIdRequest;
+import org.dimchik.common.request.MovieRequest;
+import org.dimchik.common.request.UpdateMovieRequest;
+import org.dimchik.dto.MovieDTO;
+import org.dimchik.dto.MovieFullDTO;
 import org.dimchik.service.MovieService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
+import org.springframework.core.io.ClassPathResource;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import java.io.File;
+import java.nio.file.Files;
 import java.util.*;
 
-import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.Mockito.verify;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@ExtendWith(MockitoExtension.class)
+@ExtendWith(SpringExtension.class)
 class MovieControllerTest {
-    private MovieController movieController;
-    private MovieResponseDTO movieResponseDTO;
+    private MockMvc mockMvc;
 
     @Mock
-    MovieService movieService;
+    private MovieService movieService;
+
+    private List<MovieDTO> movieList;
+    private MovieFullDTO movieFullDTO;
+    private String movieListJson;
+    private String movieFullJson;
+    private String movieCreateJson;
 
     @BeforeEach
-    void setUp() {
-        movieResponseDTO = new MovieResponseDTO(
-                1L,
-                "Побег из Шоушенка",
-                "The Shawshank Redemption",
-                1994,
-                8.90,
-                123.12,
-                "http://link"
-        );
+    void setUp() throws Exception {
+        mockMvc = MockMvcBuilders.standaloneSetup(new MovieController(movieService)).build();
+        ObjectMapper objectMapper = new ObjectMapper();
 
-        movieController = new MovieController(movieService);
+        File listFile = new ClassPathResource("movieList.json").getFile();
+        File fullFile = new ClassPathResource("movieFull.json").getFile();
+        File createFile = new ClassPathResource("movieCreate.json").getFile();
+
+        movieListJson = Files.readString(listFile.toPath());
+        movieFullJson = Files.readString(fullFile.toPath());
+        movieCreateJson = Files.readString(createFile.toPath());
+
+        movieList = objectMapper.readValue(movieListJson, new TypeReference<>() {});
+        movieFullDTO = objectMapper.readValue(movieFullJson, MovieFullDTO.class);
     }
 
     @Test
-    void findAllShouldReturnListMovies() {
-        List<MovieResponseDTO> list = List.of(movieResponseDTO);
-        when(movieService.findAll(null, null)).thenReturn(list);
-        ResponseEntity<List<MovieResponseDTO>> response = movieController.findAll(null, null);
+    void findAllReturnCorrectJson() throws Exception {
+        when(movieService.findAll(any(MovieRequest.class))).thenReturn(movieList);
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).isEqualTo(list);
-        verify(movieService).findAll(null, null);
+        mockMvc.perform(get("/api/v1/movies")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().json(movieListJson));
     }
 
     @Test
-    void findByIdShouldReturnMovie() {
-        when(movieService.findById(1)).thenReturn(movieResponseDTO);
-        ResponseEntity<MovieResponseDTO> response = movieController.findById(1);
+    void findByIdReturnCorrectJson() throws Exception {
+        when(movieService.findById(eq(1L), any(MovieByIdRequest.class))).thenReturn(movieFullDTO);
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).isEqualTo(movieResponseDTO);
-        verify(movieService).findById(1);
+        mockMvc.perform(get("/api/v1/movie/1")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().json(movieFullJson));
     }
 
     @Test
-    void randomShouldReturnListMovies() {
-        List<MovieResponseDTO> list = List.of(movieResponseDTO);
-        when(movieService.random(3)).thenReturn(list);
-        ResponseEntity<List<MovieResponseDTO>> response = movieController.random();
+    void randomReturnCorrectJson() throws Exception {
+        when(movieService.random(3)).thenReturn(movieList);
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).isEqualTo(list);
-        verify(movieService).random(3);
+        mockMvc.perform(get("/api/v1/movies/random")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().json(movieListJson));
     }
 
     @Test
-    void findByGenreIdShouldReturnListMovies() {
-        List<MovieResponseDTO> list = List.of(movieResponseDTO);
-        when(movieService.findByGenreId(1)).thenReturn(list);
-        ResponseEntity<List<MovieResponseDTO>> response = movieController.findByGenreId(1);
+    void findByGenreIdReturnCorrectJson() throws Exception {
+        when(movieService.findByGenreId(2L)).thenReturn(movieList);
 
-        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.OK);
-        assertThat(response.getBody()).isEqualTo(list);
-        verify(movieService).findByGenreId(1);
+        mockMvc.perform(get("/api/v1/movie/genre/2")
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(content().json(movieListJson));
+    }
+
+    @Test
+    void createShouldReturnMovieFullJson() throws Exception {
+        when(movieService.create(any(CreateMovieRequest.class))).thenReturn(movieFullDTO);
+
+        mockMvc.perform(post("/api/v1/movie")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(movieCreateJson))
+                .andExpect(status().isOk())
+                .andExpect(content().json(movieFullJson));
+    }
+
+    @Test
+    void updateShouldReturnUpdatedMovieJson() throws Exception {
+        when(movieService.update(eq(1L), any(UpdateMovieRequest.class))).thenReturn(movieFullDTO);
+
+        mockMvc.perform(put("/api/v1/movie/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(movieCreateJson))
+                .andExpect(status().isOk())
+                .andExpect(content().json(movieFullJson));
     }
 }

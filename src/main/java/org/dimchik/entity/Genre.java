@@ -1,10 +1,9 @@
 package org.dimchik.entity;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
 import lombok.*;
+
+import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -17,4 +16,7 @@ public class Genre {
 
     @Column(name = "name")
     private String name;
+
+    @ManyToMany(mappedBy = "genres")
+    private List<Movie> movies;
 }

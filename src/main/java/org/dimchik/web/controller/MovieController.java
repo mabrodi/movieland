@@ -1,10 +1,14 @@
 package org.dimchik.web.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.dimchik.dto.MovieResponseDTO;
+import org.dimchik.common.request.CreateMovieRequest;
+import org.dimchik.common.request.MovieByIdRequest;
+import org.dimchik.common.request.MovieRequest;
+import org.dimchik.common.request.UpdateMovieRequest;
+import org.dimchik.dto.MovieDTO;
+import org.dimchik.dto.MovieFullDTO;
 import org.dimchik.service.MovieService;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -16,32 +20,32 @@ public class MovieController {
     private final MovieService movieService;
 
     @GetMapping("/movies")
-    public ResponseEntity<List<MovieResponseDTO>> findAll(
-            @RequestParam(defaultValue = "desc") String rating,
-            @RequestParam(required = false) String price) {
-
-        List<MovieResponseDTO> movies = movieService.findAll(rating, price);
-
-        return new ResponseEntity<>(movies, HttpStatus.OK);
+    public List<MovieDTO> findAll(@Valid @ModelAttribute MovieRequest request) {
+        return movieService.findAll(request);
     }
 
     @GetMapping("movie/{id}")
-    public ResponseEntity<MovieResponseDTO> findById(@PathVariable long id) {
-        MovieResponseDTO movieResponseDTO = movieService.findById(id);
-        return new ResponseEntity<>(movieResponseDTO, HttpStatus.OK);
+    public MovieFullDTO findById(@PathVariable long id, @ModelAttribute MovieByIdRequest request) {
+        return movieService.findById(id, request);
     }
 
     @GetMapping("movies/random")
-    public ResponseEntity<List<MovieResponseDTO>> random() {
-        List<MovieResponseDTO> movies = movieService.random(3);
-
-        return new ResponseEntity<>(movies, HttpStatus.OK);
+    public List<MovieDTO> random() {
+        return movieService.random(3);
     }
 
     @GetMapping("/movie/genre/{genreId}")
-    public ResponseEntity<List<MovieResponseDTO>> findByGenreId(@PathVariable long genreId) {
-        List<MovieResponseDTO> movies = movieService.findByGenreId(genreId);
+    public List<MovieDTO> findByGenreId(@PathVariable long genreId) {
+        return movieService.findByGenreId(genreId);
+    }
 
-        return new ResponseEntity<>(movies, HttpStatus.OK);
+    @PostMapping("/movie")
+    public MovieFullDTO create(@Valid @RequestBody CreateMovieRequest request) {
+        return movieService.create(request);
+    }
+
+    @PutMapping("movie/{id}")
+    public MovieFullDTO update(@PathVariable long id, @Valid @RequestBody UpdateMovieRequest request) {
+        return movieService.update(id, request);
     }
 }

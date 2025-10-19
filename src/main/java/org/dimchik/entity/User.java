@@ -2,9 +2,9 @@ package org.dimchik.entity;
 
 import jakarta.persistence.*;
 import lombok.*;
+import org.dimchik.common.enums.Role;
 
-@Getter
-@Setter
+@Data
 @Entity
 @Table(name = "users")
 public class User {
@@ -20,4 +20,8 @@ public class User {
 
     @Column(name = "password", nullable = false)
     private String password;
+
+    @Enumerated(EnumType.STRING)
+    @Column(nullable = false)
+    private Role role = Role.USER;
 }
