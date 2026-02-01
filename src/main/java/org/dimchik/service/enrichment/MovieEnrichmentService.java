@@ -10,6 +10,7 @@ import org.dimchik.entity.Review;
 import org.dimchik.repository.CountryRepository;
 import org.dimchik.repository.GenreRepository;
 import org.dimchik.repository.ReviewRepository;
+import org.dimchik.repository.mapper.MovieMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -25,41 +26,31 @@ public class MovieEnrichmentService {
     private final GenreRepository genreRepository;
     private final CountryRepository countryRepository;
     private final ReviewRepository reviewRepository;
+    private final MovieMapper movieMapper;
 
-    @Value("${movie.enrichment.timeout-seconds}")
+    @Value("${movie.enrichment.timeout-seconds:5}")
     private int timeoutSeconds;
 
+    private final ExecutorService executor = Executors.newCachedThreadPool();
+
     public MovieFullDTO enrich(Movie movie) {
-        MovieFullDTO dto = new MovieFullDTO();
-        dto.setId(movie.getId());
-        dto.setNameRussian(movie.getNameRussian());
-        dto.setNameNative(movie.getNameNative());
-        dto.setYearOfRelease(movie.getYearOfRelease());
-        dto.setRating(movie.getRating());
-        dto.setPrice(movie.getPrice());
-        dto.setPicturePath(movie.getPoster() != null ? movie.getPoster().getPicturePath() : null);
+        MovieFullDTO dto = movieMapper.toFullDto(movie);
 
-        Thread genresThread = new Thread(() -> dto.setGenres(loadGenres(movie.getId())));
-        Thread countriesThread = new Thread(() -> dto.setCountries(loadCountries(movie.getId())));
-        Thread reviewsThread = new Thread(() -> dto.setReviews(loadReviews(movie.getId())));
+        Callable<List<GenreDTO>> genresTask = () -> loadGenres(movie.getId());
+        Callable<List<CountryDTO>> countriesTask = () -> loadCountries(movie.getId());
+        Callable<List<ReviewDTO>> reviewsTask = () -> loadReviews(movie.getId());
 
-        genresThread.start();
-        countriesThread.start();
-        reviewsThread.start();
+        Future<List<GenreDTO>> genresFuture = executor.submit(genresTask);
+        Future<List<CountryDTO>> countriesFuture = executor.submit(countriesTask);
+        Future<List<ReviewDTO>> reviewsFuture = executor.submit(reviewsTask);
 
-        waitWithTimeout(genresThread, "genres", movie.getId());
-        waitWithTimeout(countriesThread, "countries", movie.getId());
-        waitWithTimeout(reviewsThread, "reviews", movie.getId());
+        List<GenreDTO> genres = getWithTimeout(genresFuture, "genres", movie.getId());
+        List<CountryDTO> countries = getWithTimeout(countriesFuture, "countries", movie.getId());
+        List<ReviewDTO> reviews = getWithTimeout(reviewsFuture, "reviews", movie.getId());
 
-        if (dto.getGenres() == null) {
-            dto.setGenres(Collections.emptyList());
-        }
-        if (dto.getCountries() == null) {
-            dto.setCountries(Collections.emptyList());
-        }
-        if (dto.getReviews() == null) {
-            dto.setReviews(Collections.emptyList());
-        }
+        dto.setGenres(genres != null ? genres : Collections.emptyList());
+        dto.setCountries(countries != null ? countries : Collections.emptyList());
+        dto.setReviews(reviews != null ? reviews : Collections.emptyList());
 
         return dto;
     }
@@ -67,14 +58,22 @@ public class MovieEnrichmentService {
     private List<GenreDTO> loadGenres(Long movieId) {
         try {
             List<Genre> genres = genreRepository.findAllByMovieId(movieId);
-            List<GenreDTO> result = new ArrayList<>();
-            for (Genre genre : genres) {
-                if (Thread.currentThread().isInterrupted()) {
-                    return Collections.emptyList();
-                }
-                result.add(new GenreDTO(genre.getId(), genre.getName()));
+            return genres.stream()
+                    .peek(genre -> {
+                        if (Thread.currentThread().isInterrupted()) {
+                            throw new RuntimeException("Interrupted while mapping genres");
+                        }
+                    })
+                    .map(genre -> new GenreDTO(genre.getId(), genre.getName()))
+                    .toList();
+
+        } catch (RuntimeException e) {
+            if (Thread.currentThread().isInterrupted()) {
+                log.warn("Genres loading interrupted for movie id={}", movieId);
+                return Collections.emptyList();
             }
-            return result;
+            log.error("Error loading genres for movie {}: {}", movieId, e.getMessage(), e);
+            return Collections.emptyList();
         } catch (Exception e) {
             log.error("Error loading genres for movie {}: {}", movieId, e.getMessage());
             return Collections.emptyList();
@@ -84,14 +83,22 @@ public class MovieEnrichmentService {
     private List<CountryDTO> loadCountries(Long movieId) {
         try {
             List<Country> countries = countryRepository.findAllByMovieId(movieId);
-            List<CountryDTO> result = new ArrayList<>();
-            for (Country country : countries) {
-                if (Thread.currentThread().isInterrupted()) {
-                    return Collections.emptyList();
-                }
-                result.add(new CountryDTO(country.getId(), country.getName()));
+
+            return countries.stream()
+                    .peek(country -> {
+                        if (Thread.currentThread().isInterrupted()) {
+                            throw new RuntimeException("Interrupted while mapping countries");
+                        }
+                    })
+                    .map(country -> new CountryDTO(country.getId(), country.getName()))
+                    .toList();
+        } catch (RuntimeException e) {
+            if (Thread.currentThread().isInterrupted()) {
+                log.warn("Countries loading interrupted for movie id={}", movieId);
+                return Collections.emptyList();
             }
-            return result;
+            log.error("Error loading countries for movie {}: {}", movieId, e.getMessage(), e);
+            return Collections.emptyList();
         } catch (Exception e) {
             log.error("Error loading countries for movie {}: {}", movieId, e.getMessage());
             return Collections.emptyList();
@@ -101,31 +108,50 @@ public class MovieEnrichmentService {
     private List<ReviewDTO> loadReviews(Long movieId) {
         try {
             List<Review> reviews = reviewRepository.findAllByMovieId(movieId);
-            List<ReviewDTO> result = new ArrayList<>();
-            for (Review review : reviews) {
-                if (Thread.currentThread().isInterrupted()) {
-                    return Collections.emptyList();
-                }
-                UserDTO user = new UserDTO(review.getAuthor().getId(), review.getAuthor().getName());
-                result.add(new ReviewDTO(review.getId(), review.getComment(), user));
+
+            return reviews.stream()
+                    .peek(review -> {
+                        if (Thread.currentThread().isInterrupted()) {
+                            throw new RuntimeException("Interrupted while mapping reviews");
+                        }
+                    })
+                    .map(review -> {
+                        UserDTO user = new UserDTO(
+                                review.getAuthor().getId(),
+                                review.getAuthor().getName()
+                        );
+                        return new ReviewDTO(review.getId(), review.getComment(), user);
+                    })
+                    .toList();
+
+        } catch (RuntimeException e) {
+            if (Thread.currentThread().isInterrupted()) {
+                log.warn("Reviews loading interrupted for movie id={}", movieId);
+                return Collections.emptyList();
             }
-            return result;
+            log.error("Error loading reviews for movie {}: {}", movieId, e.getMessage(), e);
+            return Collections.emptyList();
         } catch (Exception e) {
             log.error("Error loading reviews for movie {}: {}", movieId, e.getMessage());
             return Collections.emptyList();
         }
     }
 
-    private void waitWithTimeout(Thread thread, String name, long movieId) {
+    private <T> List<T> getWithTimeout(Future<List<T>> future, String name, long movieId) {
         try {
-            thread.join(timeoutSeconds * 1000L);
-            if (thread.isAlive()) {
-                log.warn("Timeout while loading {} for movie id={}", name, movieId);
-                thread.interrupt();
-            }
+            return future.get(timeoutSeconds, TimeUnit.SECONDS);
+        } catch (TimeoutException e) {
+            log.warn("Timeout ({}s) while loading {} for movie id={}. Cancelling task.",
+                    timeoutSeconds, name, movieId);
+            future.cancel(true);
+            return Collections.emptyList();
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            log.error("{} thread interrupted for movie id={}", name, movieId);
+            log.error("{} loading interrupted for movie id={}", name, movieId);
+            return Collections.emptyList();
+        } catch (ExecutionException e) {
+            log.error("Error during {} loading for movie id={}: {}", name, movieId, e.getCause().getMessage(), e.getCause());
+            return Collections.emptyList();
         }
     }
 }

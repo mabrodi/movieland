@@ -23,6 +23,4 @@ public class MovieFullDTO {
     private List<CountryDTO> countries;
     private List<GenreDTO> genres;
     private List<ReviewDTO> reviews;
-
-
 }

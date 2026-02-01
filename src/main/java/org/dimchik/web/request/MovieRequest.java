@@ -1,4 +1,4 @@
-package org.dimchik.common.request;
+package org.dimchik.web.request;
 
 import lombok.Getter;
 import org.dimchik.common.enums.SortDirection;

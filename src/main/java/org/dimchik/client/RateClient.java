@@ -13,8 +13,8 @@ import java.util.Map;
 public class RateClient {
     private final RestClient restClient;
 
-    private RateClient(RestClient.Builder builder, @Value("${client.rate.url}") String url) {
-        this.restClient = builder.baseUrl(url).build();
+    private RateClient(@Value("${client.rate.url}") String url) {
+        this.restClient = RestClient.builder().baseUrl(url).build();
     }
 
     public List<RateDTO> findAll() {

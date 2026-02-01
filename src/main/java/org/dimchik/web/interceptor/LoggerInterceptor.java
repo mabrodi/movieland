@@ -4,9 +4,10 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.dimchik.dto.AuthSessionDTO;
-import org.dimchik.service.SecurityService;
 import org.slf4j.MDC;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
@@ -16,30 +17,18 @@ import java.util.UUID;
 @Component
 @RequiredArgsConstructor
 public class LoggerInterceptor implements HandlerInterceptor {
-    private final SecurityService securityService;
+    public static final String MDC_REQUEST_ID = "requestId";
+    public static final String MDC_USER = "user";
 
     @Override
-    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {
+
         String requestId = UUID.randomUUID().toString();
-        MDC.put("requestId", requestId);
-
-        String token = request.getHeader("Authorization");
-        String userLogin = "guest";
-
-        if (token != null && !token.isBlank()) {
-            try {
-                AuthSessionDTO session = securityService.findSessionByToken(token);
-                if (session != null && session.getUser() != null) {
-                    userLogin = session.getUser().getEmail();
-                }
-            } catch (Exception e) {
-                userLogin = "unauthorized";
-            }
-        }
-
-        MDC.put("user", userLogin);
-
+        MDC.put(MDC_REQUEST_ID, requestId);
         response.setHeader("X-Request-Id", requestId);
+
+        String userLogin = resolveUser();
+        MDC.put(MDC_USER, userLogin);
 
         log.info("Incoming request: {} {}", request.getMethod(), request.getRequestURI());
 
@@ -47,7 +36,27 @@ public class LoggerInterceptor implements HandlerInterceptor {
     }
 
     @Override
-    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception {
+    public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) {
         MDC.clear();
+    }
+
+    private String resolveUser() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return "guest";
+        }
+
+        Object principal = authentication.getPrincipal();
+
+        if (principal instanceof UserDetails userDetails) {
+            return userDetails.getUsername();
+        }
+
+        if (principal instanceof String str) {
+            return str;
+        }
+
+        return "unknown";
     }
 }

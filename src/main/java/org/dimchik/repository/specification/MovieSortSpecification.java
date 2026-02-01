@@ -5,6 +5,19 @@ import org.springframework.data.domain.Sort;
 
 public class MovieSortSpecification {
 
+    public static Sort build(SortDirection rating, SortDirection price) {
+        Sort sort = Sort.unsorted();
+
+        if (rating != null) {
+            sort = sort.and(sortByRating(rating));
+        }
+        if (price != null) {
+            sort = sort.and(sortByPrice(price));
+        }
+
+        return sort.isUnsorted() ? Sort.by("id").ascending() : sort;
+    }
+
     public static Sort sortByRating(SortDirection direction) {
         return direction == SortDirection.ASC
                 ? Sort.by(Sort.Order.asc("rating"))

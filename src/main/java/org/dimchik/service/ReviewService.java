@@ -1,9 +1,9 @@
 package org.dimchik.service;
 
-import org.dimchik.common.request.CreateReviewRequest;
-import org.dimchik.dto.AuthSessionDTO;
 import org.dimchik.dto.ReviewDTO;
+import org.dimchik.web.request.CreateReviewRequest;
+import org.springframework.security.core.userdetails.UserDetails;
 
 public interface ReviewService {
-    ReviewDTO create(CreateReviewRequest request, AuthSessionDTO currentUser);
+    ReviewDTO create(CreateReviewRequest request, UserDetails user);
 }

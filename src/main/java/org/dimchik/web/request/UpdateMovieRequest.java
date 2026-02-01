@@ -1,6 +1,5 @@
-package org.dimchik.common.request;
+package org.dimchik.web.request;
 
-import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
 

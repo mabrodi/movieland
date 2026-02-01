@@ -6,8 +6,8 @@ import org.dimchik.entity.Movie;
 import org.dimchik.repository.MovieRepository;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Slf4j
 @Service
@@ -15,26 +15,19 @@ import java.util.List;
 public class MovieCacheService {
 
     private final MovieRepository movieRepository;
-    private final List<Movie> cache = new ArrayList<>();
+    private final Map<Long, Movie> cache = new ConcurrentHashMap<>();
 
-    public synchronized Movie getMovie(long id) {
-        for (Movie cached : cache) {
-            if (cached.getId() == id) {
-                log.info("Movie id={} loaded from cache", id);
-                return cached;
-            }
+    public  Movie getMovie(long id) {
+        Movie cached = cache.get(id);
+        if (cached != null) {
+            log.info("Movie id={} loaded from cache", id);
+            return cached;
         }
 
         Movie movie = movieRepository.findById(id).orElse(null);
         if (movie != null) {
-            try {
-                cache.add(movie);
-                log.info("Movie id={} loaded from DB and cached", id);
-            } catch (OutOfMemoryError e) {
-                log.warn("Not enough memory, clearing cache...");
-                cache.clear();
-                log.warn("Movie cache cleared");
-            }
+            cache.put(id, movie);
+            log.info("Movie id={} loaded from DB and cached", id);
         } else {
             log.warn("Movie id={} not found in DB", id);
         }
@@ -42,16 +35,14 @@ public class MovieCacheService {
         return movie;
     }
 
-    public synchronized void updateMovie(Movie updatedMovie) {
+    public  void updateMovie(Movie updatedMovie) {
         movieRepository.save(updatedMovie);
 
-        for (int i = 0; i < cache.size(); i++) {
-            Movie cached = cache.get(i);
-            if (cached.getId().equals(updatedMovie.getId())) {
-                cache.set(i, updatedMovie);
-                log.info("🔄 Movie id={} updated in cache", updatedMovie.getId());
-                return;
-            }
+        Movie cached = cache.get(updatedMovie.getId());
+        if (cached != null) {
+            cache.put(updatedMovie.getId(), updatedMovie);
+            log.info("Movie id={} updated in cache", updatedMovie.getId());
+            return;
         }
 
         log.info("Movie id={} updated in DB only (not in cache)", updatedMovie.getId());

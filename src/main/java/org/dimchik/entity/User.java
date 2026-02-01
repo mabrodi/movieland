@@ -1,7 +1,7 @@
 package org.dimchik.entity;
 
 import jakarta.persistence.*;
-import lombok.*;
+import lombok.Data;
 import org.dimchik.common.enums.Role;
 
 @Data

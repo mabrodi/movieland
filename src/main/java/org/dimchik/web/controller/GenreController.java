@@ -1,5 +1,6 @@
 package org.dimchik.web.controller;
 
+import lombok.RequiredArgsConstructor;
 import org.dimchik.dto.GenreDTO;
 import org.dimchik.service.GenreService;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -10,12 +11,9 @@ import java.util.List;
 
 @RestController
 @RequestMapping("api/v1/genre")
+@RequiredArgsConstructor
 public class GenreController {
     private final GenreService genreService;
-
-    public GenreController(GenreService genreService) {
-        this.genreService = genreService;
-    }
 
     @GetMapping
     public List<GenreDTO> findAll() {

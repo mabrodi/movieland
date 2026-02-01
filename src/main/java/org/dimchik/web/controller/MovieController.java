@@ -2,13 +2,14 @@ package org.dimchik.web.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.dimchik.common.request.CreateMovieRequest;
-import org.dimchik.common.request.MovieByIdRequest;
-import org.dimchik.common.request.MovieRequest;
-import org.dimchik.common.request.UpdateMovieRequest;
 import org.dimchik.dto.MovieDTO;
 import org.dimchik.dto.MovieFullDTO;
 import org.dimchik.service.MovieService;
+import org.dimchik.web.request.CreateMovieRequest;
+import org.dimchik.web.request.MovieByIdRequest;
+import org.dimchik.web.request.MovieRequest;
+import org.dimchik.web.request.UpdateMovieRequest;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -39,11 +40,13 @@ public class MovieController {
         return movieService.findByGenreId(genreId);
     }
 
+    @PreAuthorize("hasAnyAuthority('ADMIN')")
     @PostMapping("/movie")
     public MovieFullDTO create(@Valid @RequestBody CreateMovieRequest request) {
         return movieService.create(request);
     }
 
+    @PreAuthorize("hasAnyAuthority('ADMIN')")
     @PutMapping("movie/{id}")
     public MovieFullDTO update(@PathVariable long id, @Valid @RequestBody UpdateMovieRequest request) {
         return movieService.update(id, request);

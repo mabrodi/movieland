@@ -1,8 +1,6 @@
 package org.dimchik.service.base;
 
 import lombok.RequiredArgsConstructor;
-import org.dimchik.common.request.CreateReviewRequest;
-import org.dimchik.dto.AuthSessionDTO;
 import org.dimchik.dto.ReviewDTO;
 import org.dimchik.dto.UserDTO;
 import org.dimchik.entity.Movie;
@@ -12,9 +10,9 @@ import org.dimchik.repository.MovieRepository;
 import org.dimchik.repository.ReviewRepository;
 import org.dimchik.repository.UserRepository;
 import org.dimchik.service.ReviewService;
+import org.dimchik.web.request.CreateReviewRequest;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
-
-import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -25,11 +23,11 @@ public class ReviewServiceBase implements ReviewService {
 
 
     @Override
-    public ReviewDTO create(CreateReviewRequest request, AuthSessionDTO currentUser) {
+    public ReviewDTO create(CreateReviewRequest request, UserDetails userDetails) {
         Movie movie = movieRepository.findById(request.getMovieId())
                 .orElseThrow(() -> new IllegalArgumentException("Movie not found with id: " + request.getMovieId()));
-        User user = userRepository.findById(currentUser.getUser().getId())
-                .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + currentUser.getUser().getId()));;
+        User user = userRepository.findByEmail(userDetails.getUsername())
+                .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + userDetails.getUsername()));
         Review review = new Review();
         review.setMovie(movie);
         review.setAuthor(user);
