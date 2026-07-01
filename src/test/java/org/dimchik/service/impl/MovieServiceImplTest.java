@@ -1,8 +1,8 @@
-package org.dimchik.service.base;
+package org.dimchik.service.impl;
 
-import org.dimchik.common.enums.Currency;
-import org.dimchik.dto.MovieDTO;
-import org.dimchik.dto.MovieFullDTO;
+import org.dimchik.enums.Currency;
+import org.dimchik.web.response.MovieDetailResponse;
+import org.dimchik.web.response.MovieResponse;
 import org.dimchik.dto.RateDTO;
 import org.dimchik.entity.Country;
 import org.dimchik.entity.Genre;
@@ -17,9 +17,8 @@ import org.dimchik.service.cache.MovieCacheService;
 import org.dimchik.service.cache.RateCacheService;
 import org.dimchik.service.enrichment.MovieEnrichmentService;
 import org.dimchik.web.exception.ResourceNotFoundException;
+import org.dimchik.enums.SortDirection;
 import org.dimchik.web.request.CreateMovieRequest;
-import org.dimchik.web.request.MovieByIdRequest;
-import org.dimchik.web.request.MovieRequest;
 import org.dimchik.web.request.UpdateMovieRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -36,7 +35,7 @@ import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class MovieServiceBaseTest {
+class MovieServiceImplTest {
     @Mock
     private MovieRepository movieRepository;
     @Mock
@@ -55,13 +54,13 @@ class MovieServiceBaseTest {
     private GenreRepository genreRepository;
 
     @InjectMocks
-    private MovieServiceBase movieService;
+    private MovieServiceImpl movieService;
 
     private Movie movie1;
     private Movie movie2;
-    private MovieDTO movieDTO1;
-    private MovieDTO movieDTO2;
-    private MovieFullDTO fullDtoBase;
+    private MovieResponse movieResponse1;
+    private MovieResponse movieResponse2;
+    private MovieDetailResponse fullDtoBase;
 
     @BeforeEach
     void setUp() {
@@ -88,7 +87,7 @@ class MovieServiceBaseTest {
                 .poster(poster)
                 .build();
 
-        movieDTO1 = MovieDTO.builder()
+        movieResponse1 = MovieResponse.builder()
                 .id(1L)
                 .nameRussian("Побег из Шоушенка")
                 .nameNative("The Shawshank Redemption")
@@ -98,7 +97,7 @@ class MovieServiceBaseTest {
                 .picturePath("shawshank.jpg")
                 .build();
 
-        movieDTO2 = MovieDTO.builder()
+        movieResponse2 = MovieResponse.builder()
                 .id(2L)
                 .nameRussian("Крестный отец")
                 .nameNative("The Godfather")
@@ -108,7 +107,7 @@ class MovieServiceBaseTest {
                 .picturePath("shawshank.jpg")
                 .build();
 
-        fullDtoBase = MovieFullDTO.builder()
+        fullDtoBase = MovieDetailResponse.builder()
                 .id(1L)
                 .nameRussian("Побег из Шоушенка")
                 .nameNative("The Shawshank Redemption")
@@ -122,15 +121,15 @@ class MovieServiceBaseTest {
     @Test
     void findAllShouldUseRepositorySortAndMapToDto() {
         when(movieRepository.findAll(any(Sort.class))).thenReturn(List.of(movie1, movie2));
-        when(movieMapper.toDto(movie1)).thenReturn(movieDTO1);
-        when(movieMapper.toDto(movie2)).thenReturn(movieDTO2);
+        when(movieMapper.toResponse(movie1)).thenReturn(movieResponse1);
+        when(movieMapper.toResponse(movie2)).thenReturn(movieResponse2);
 
-        List<MovieDTO> result = movieService.findAll(new MovieRequest());
+        List<MovieResponse> result = movieService.findAll(SortDirection.DESC, null);
 
-        assertThat(result).containsExactly(movieDTO1, movieDTO2);
+        assertThat(result).containsExactly(movieResponse1, movieResponse2);
         verify(movieRepository).findAll(any(Sort.class));
-        verify(movieMapper).toDto(movie1);
-        verify(movieMapper).toDto(movie2);
+        verify(movieMapper).toResponse(movie1);
+        verify(movieMapper).toResponse(movie2);
         verifyNoMoreInteractions(movieCacheService, movieEnrichmentService, rateCacheService);
     }
 
@@ -138,7 +137,7 @@ class MovieServiceBaseTest {
     void findAllShouldReturnEmptyWhenRepoReturnsEmpty() {
         when(movieRepository.findAll(any(Sort.class))).thenReturn(List.of());
 
-        List<MovieDTO> result = movieService.findAll(new MovieRequest());
+        List<MovieResponse> result = movieService.findAll(SortDirection.DESC, null);
 
         assertThat(result).isEmpty();
         verify(movieRepository).findAll(any(Sort.class));
@@ -150,7 +149,7 @@ class MovieServiceBaseTest {
     void random_shouldReturnEmptyWhenNoMovies() {
         when(movieRepository.findAll()).thenReturn(List.of());
 
-        List<MovieDTO> result = movieService.random(5);
+        List<MovieResponse> result = movieService.random(5);
 
         assertThat(result).isEmpty();
         verify(movieRepository).findAll();
@@ -160,10 +159,9 @@ class MovieServiceBaseTest {
 
     @Test
     void findByIdShouldThrowWhenMovieNotInCache() {
-        MovieByIdRequest request = new MovieByIdRequest();
         when(movieCacheService.getMovie(1L)).thenReturn(null);
 
-        assertThatThrownBy(() -> movieService.findById(1L, request))
+        assertThatThrownBy(() -> movieService.findById(1L, Currency.UAH))
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining("Movie not found with id: 1");
 
@@ -174,13 +172,10 @@ class MovieServiceBaseTest {
 
     @Test
     void findByIdShouldEnrichAndNotConvertPriceForUAH() {
-        MovieByIdRequest request = new MovieByIdRequest();
-        request.setCurrency(Currency.UAH);
-
         when(movieCacheService.getMovie(1L)).thenReturn(movie1);
         when(movieEnrichmentService.enrich(movie1)).thenReturn(fullDtoBase);
 
-        MovieFullDTO result = movieService.findById(1L, request);
+        MovieDetailResponse result = movieService.findById(1L, Currency.UAH);
 
         assertThat(result).isSameAs(fullDtoBase);
         assertThat(result.getPrice()).isEqualTo(100.0);
@@ -192,9 +187,6 @@ class MovieServiceBaseTest {
 
     @Test
     void findByIdShouldConvertPriceForUSDWhenRateExists() {
-        MovieByIdRequest request = new MovieByIdRequest();
-        request.setCurrency(Currency.USD);
-
         when(movieCacheService.getMovie(1L)).thenReturn(movie1);
         when(movieEnrichmentService.enrich(movie1)).thenReturn(fullDtoBase);
         when(rateCacheService.findAll()).thenReturn(List.of(
@@ -202,7 +194,7 @@ class MovieServiceBaseTest {
                 new RateDTO(2L, "Euro", "EUR", 42.0)
         ));
 
-        MovieFullDTO result = movieService.findById(1L, request);
+        MovieDetailResponse result = movieService.findById(1L, Currency.USD);
 
         assertThat(result.getPrice()).isEqualTo(100.0 * 50.0);
         verify(rateCacheService).findAll();
@@ -210,16 +202,13 @@ class MovieServiceBaseTest {
 
     @Test
     void findByIdShouldNotChangePriceWhenRateNotFound() {
-        MovieByIdRequest request = new MovieByIdRequest();
-        request.setCurrency(Currency.USD);
-
         when(movieCacheService.getMovie(1L)).thenReturn(movie1);
         when(movieEnrichmentService.enrich(movie1)).thenReturn(fullDtoBase);
         when(rateCacheService.findAll()).thenReturn(List.of(
                 new RateDTO(2L, "Euro", "EUR", 42.0)
         ));
 
-        MovieFullDTO result = movieService.findById(1L, request);
+        MovieDetailResponse result = movieService.findById(1L, Currency.USD);
 
         assertThat(result.getPrice()).isEqualTo(100.0);
         verify(rateCacheService).findAll();
@@ -246,10 +235,10 @@ class MovieServiceBaseTest {
         when(countryRepository.findAllById(List.of(1L))).thenReturn(List.of(country));
         when(movieRepository.save(mapped)).thenReturn(mapped);
 
-        MovieFullDTO out = MovieFullDTO.builder().id(99L).price(10.0).build();
-        when(movieMapper.toFullDto(mapped)).thenReturn(out);
+        MovieDetailResponse out = MovieDetailResponse.builder().id(99L).price(10.0).build();
+        when(movieMapper.toDetailResponse(mapped)).thenReturn(out);
 
-        MovieFullDTO result = movieService.create(request);
+        MovieDetailResponse result = movieService.create(request);
 
         assertThat(result).isSameAs(out);
 
@@ -260,11 +249,11 @@ class MovieServiceBaseTest {
 
         verify(movieRepository).save(mapped);
         verify(movieCacheService).updateMovie(mapped);
-        verify(movieMapper).toFullDto(mapped);
+        verify(movieMapper).toDetailResponse(mapped);
     }
 
     @Test
-    void createShouldThrow_whenSomeGenresMissing() {
+    void createShouldThrowWhenSomeGenresMissing() {
         CreateMovieRequest request = new CreateMovieRequest();
         request.setGenres(List.of(1L, 2L));
         request.setCountries(List.of());
@@ -322,10 +311,10 @@ class MovieServiceBaseTest {
         when(countryRepository.findAllById(List.of(3L))).thenReturn(List.of(country));
         when(movieRepository.save(existing)).thenReturn(existing);
 
-        MovieFullDTO out = MovieFullDTO.builder().id(1L).build();
-        when(movieMapper.toFullDto(existing)).thenReturn(out);
+        MovieDetailResponse out = MovieDetailResponse.builder().id(1L).build();
+        when(movieMapper.toDetailResponse(existing)).thenReturn(out);
 
-        MovieFullDTO result = movieService.update(1L, request);
+        MovieDetailResponse result = movieService.update(1L, request);
 
         assertThat(result).isSameAs(out);
 
@@ -337,7 +326,7 @@ class MovieServiceBaseTest {
 
         verify(movieRepository).save(existing);
         verify(movieCacheService).updateMovie(existing);
-        verify(movieMapper).toFullDto(existing);
+        verify(movieMapper).toDetailResponse(existing);
     }
 
     @Test

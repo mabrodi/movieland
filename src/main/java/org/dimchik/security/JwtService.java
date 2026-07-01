@@ -1,73 +1,80 @@
 package org.dimchik.security;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.Jws;
-import io.jsonwebtoken.JwtException;
-import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
+import org.dimchik.enums.Role;
+import org.dimchik.dto.TokenUserDTO;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import javax.crypto.SecretKey;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
-import java.util.List;
+import java.util.UUID;
 
 @Service
 public class JwtService {
-    @Value("${security.jwt.secret}")
-    private String secret;
+    private final SecretKey signingKey;
+    private final long tokenTtl;
 
-    @Value("${security.jwt.ttl-minutes}")
-    private long ttlMinutes;
-
-    private SecretKey key() {
-        return Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+    public JwtService(
+            @Value("${security.jwt.secret}") String secret,
+            @Value("${security.jwt.ttl-minutes}") long ttl
+    ) {
+        this.signingKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
+        this.tokenTtl = ttl * 60 * 1000L;
     }
 
-    public String generate(UserDetails user) {
-        Date issuedDate = new Date();
-        Date expirationDate = new Date(issuedDate.getTime() + ttlMinutes * 60 * 1000);
-
-        List<String> authorities = user.getAuthorities().stream()
-                .map(GrantedAuthority::getAuthority)
-                .toList();
+    public String generateToken(TokenUserDTO user) {
+        Date now = new Date();
+        Date expiration = new Date(now.getTime() + tokenTtl);
 
         return Jwts.builder()
-                .subject(user.getUsername())
-                .issuedAt(issuedDate)
-                .expiration(expirationDate)
-                .claim("auth", authorities)
-                .signWith(key(), Jwts.SIG.HS256)
+                .subject(user.getEmail())
+                .id(UUID.randomUUID().toString())
+                .issuedAt(now)
+                .expiration(expiration)
+                .claim("userId", user.getId())
+                .claim("name", user.getName())
+                .claim("role", user.getRole())
+                .signWith(signingKey)
                 .compact();
     }
 
-    public String extractUsername(String token) {
-        return parse(token).getPayload().getSubject();
+    public TokenUserDTO extractUser(String token) {
+        return TokenUserDTO.builder()
+                .id(parseToken(token).get("userId", Long.class))
+                .name(parseToken(token).get("name", String.class))
+                .email(parseToken(token).getSubject())
+                .role(Role.valueOf(parseToken(token).get("role", String.class)))
+                .build();
     }
 
-    public boolean isValid(String token, UserDetails user) {
+    public boolean isValid(String token) {
         try {
-            Claims claims = parse(token).getPayload();
-
-            return claims.getSubject().equals(user.getUsername())
-                    && claims.getExpiration().after(new Date());
-
-        } catch (JwtException | IllegalArgumentException e) {
+            Claims claims = parseToken(token);
+            return !claims.getExpiration().before(new Date());
+        } catch (Exception e) {
             return false;
         }
     }
 
-    private Jws<Claims> parse(String token) {
-        return Jwts.parser()
-                .verifyWith(key())
-                .build()
-                .parseSignedClaims(token);
+    public String refreshToken(String token) {
+        TokenUserDTO extractUserFromToken = extractUser(token);
+        TokenUserDTO dto = TokenUserDTO.builder()
+                .id(extractUserFromToken.getId())
+                .email(extractUserFromToken.getEmail())
+                .role(extractUserFromToken.getRole())
+                .build();
+
+        return generateToken(dto);
     }
 
-    public Date extractExpiration(String token) {
-        return parse(token).getPayload().getExpiration();
+    private Claims parseToken(String token) {
+        return Jwts.parser()
+                .verifyWith(signingKey)
+                .build()
+                .parseSignedClaims(token)
+                .getPayload();
     }
 }

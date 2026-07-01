@@ -1,6 +1,6 @@
 package org.dimchik.repository.specification;
 
-import org.dimchik.common.enums.SortDirection;
+import org.dimchik.enums.SortDirection;
 import org.springframework.data.domain.Sort;
 
 public class MovieSortSpecification {

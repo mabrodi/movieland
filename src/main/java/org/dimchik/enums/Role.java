@@ -1,4 +1,4 @@
-package org.dimchik.common.enums;
+package org.dimchik.enums;
 
 public enum Role {
     ADMIN,

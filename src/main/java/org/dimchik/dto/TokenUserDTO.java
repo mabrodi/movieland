@@ -1,14 +1,14 @@
 package org.dimchik.dto;
 
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-import org.dimchik.common.enums.Role;
+import lombok.*;
+import org.dimchik.enums.Role;
 
-@Data
+@Getter
+@Setter
+@Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class UserAuthDTO {
+public class TokenUserDTO {
     private long id;
     private String name;
     private String email;

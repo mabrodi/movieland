@@ -10,10 +10,10 @@ import java.util.List;
 import java.util.Map;
 
 @Component
-public class RateClient {
+public class NBURateClient {
     private final RestClient restClient;
 
-    private RateClient(@Value("${client.rate.url}") String url) {
+    public NBURateClient(@Value("${client.rate.url}") String url) {
         this.restClient = RestClient.builder().baseUrl(url).build();
     }
 
@@ -23,9 +23,6 @@ public class RateClient {
                 .retrieve()
                 .body(new ParameterizedTypeReference<>() {});
 
-        if (response == null) {
-            return List.of();
-        }
 
         return response.stream()
                 .map(item -> new RateDTO(

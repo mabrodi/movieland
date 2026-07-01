@@ -1,17 +1,17 @@
 package org.dimchik.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
+import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
 @Builder
-@Data
+@Getter
+@Setter
 @Entity
 @AllArgsConstructor
 @NoArgsConstructor
@@ -39,19 +39,15 @@ public class Movie {
     @Column(name = "price")
     private double price;
 
-    @Column(name = "created_at", insertable = false, updatable = false)
-    private LocalDateTime createdAt;
-
-    @UpdateTimestamp
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
-
+    @JsonIgnore
     @OneToOne(mappedBy = "movie")
     private Poster poster;
 
+    @JsonIgnore
     @OneToMany(mappedBy = "movie", fetch = FetchType.LAZY)
     private List<Review> reviews;
 
+    @JsonIgnore
     @ManyToMany
     @JoinTable(
             name = "movie_countries",
@@ -59,10 +55,19 @@ public class Movie {
             inverseJoinColumns = @JoinColumn(name = "country_id"))
     private List<Country> countries;
 
+    @JsonIgnore
     @ManyToMany
     @JoinTable(
             name = "movie_genres",
             joinColumns = @JoinColumn(name = "movie_id"),
             inverseJoinColumns = @JoinColumn(name = "genre_id"))
     private List<Genre> genres;
+
+    @CreationTimestamp
+    @Column(name = "created_at", updatable = false, nullable = false)
+    private LocalDateTime createdAt;
+
+    @UpdateTimestamp
+    @Column(name = "updated_at", nullable = false)
+    private LocalDateTime updatedAt;
 }

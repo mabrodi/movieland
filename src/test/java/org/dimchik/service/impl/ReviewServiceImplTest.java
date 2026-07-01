@@ -1,4 +1,4 @@
-package org.dimchik.service.base;
+package org.dimchik.service.impl;
 
 import org.dimchik.dto.ReviewDTO;
 import org.dimchik.entity.Movie;
@@ -22,14 +22,14 @@ import static org.assertj.core.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class ReviewServiceBaseTest {
+class ReviewServiceImplTest {
 
     @Mock private ReviewRepository reviewRepository;
     @Mock private MovieRepository movieRepository;
     @Mock private UserRepository userRepository;
 
     @InjectMocks
-    private ReviewServiceBase reviewService;
+    private ReviewServiceImpl reviewService;
 
     @Test
     void createShouldSaveReviewAndReturnDto() {
@@ -102,11 +102,11 @@ class ReviewServiceBaseTest {
 
     @Test
     void createShouldThrowWhenUserNotFound() {
-        var request = new CreateReviewRequest();
+        CreateReviewRequest request = new CreateReviewRequest();
         request.setMovieId(10L);
         request.setText("text");
 
-        var movie = new Movie();
+        Movie movie = new Movie();
         movie.setId(10L);
 
         UserDetails principal = new User("missing@example.com", "x", List.of());

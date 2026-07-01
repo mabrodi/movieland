@@ -2,7 +2,7 @@ package org.dimchik.web.request;
 
 import lombok.Getter;
 import lombok.Setter;
-import org.dimchik.common.enums.Currency;
+import org.dimchik.enums.Currency;
 
 @Setter
 @Getter

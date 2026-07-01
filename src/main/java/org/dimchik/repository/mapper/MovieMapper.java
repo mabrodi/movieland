@@ -1,6 +1,7 @@
 package org.dimchik.repository.mapper;
 
-import org.dimchik.dto.*;
+import org.dimchik.web.response.MovieDetailResponse;
+import org.dimchik.web.response.MovieResponse;
 import org.dimchik.entity.Movie;
 import org.dimchik.web.request.CreateMovieRequest;
 import org.dimchik.web.request.UpdateMovieRequest;
@@ -12,10 +13,10 @@ import org.mapstruct.ReportingPolicy;
 @Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface MovieMapper {
     @Mapping(target = "picturePath", source = "poster.picturePath")
-    MovieDTO toDto(Movie movie);
+    MovieResponse toResponse(Movie movie);
 
     @Mapping(target = "picturePath", source = "poster.picturePath")
-    MovieFullDTO toFullDto(Movie movie);
+    MovieDetailResponse toDetailResponse(Movie movie);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "createdAt", ignore = true)

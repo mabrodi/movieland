@@ -8,42 +8,31 @@ import lombok.extern.slf4j.Slf4j;
 import org.dimchik.dto.GenreDTO;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class GenreCacheService {
     @PersistenceContext
-    private EntityManager em;
+    private final EntityManager entityManager;
 
-    private volatile List<GenreDTO> list = List.of();
+    private volatile List<GenreDTO> list;
 
     public List<GenreDTO> findAll() {
-        return new CopyOnWriteArrayList<>(list);
+        return Collections.unmodifiableList(list);
     }
 
     @PostConstruct
-    public void init() {
-        log.info("Initializing Genre cache on application startup");
-        refreshCache();
-    }
-
-    @Scheduled(fixedDelayString = "${cache.genre.refresh-interval}")
-    public void refreshCache() {
+    @Scheduled(cron = "${cache.genre.refresh-cron}")
+    private void refreshCache() {
         try {
-            List<GenreDTO> genres = em.createQuery(
+            List<GenreDTO> genres = entityManager.createQuery(
                     "select new org.dimchik.dto.GenreDTO(g.id, g.name) from Genre g",
                     GenreDTO.class
             ).getResultList();
-
-            if (genres == null || genres.isEmpty()) {
-                log.warn("genre returned empty list, keeping previous cache");
-                return;
-            }
 
             list = genres;
 

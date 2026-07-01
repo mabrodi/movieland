@@ -1,7 +1,7 @@
 package org.dimchik.web.request;
 
 import lombok.Getter;
-import org.dimchik.common.enums.SortDirection;
+import org.dimchik.enums.SortDirection;
 
 @Getter
 public class MovieRequest {

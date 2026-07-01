@@ -1,5 +1,7 @@
 package org.dimchik.security;
 
+import org.dimchik.dto.TokenUserDTO;
+import org.dimchik.enums.Role;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -18,102 +20,173 @@ class JwtServiceTest {
     private static final String SECRET = "0123456789abcdef0123456789abcdef";
 
     @BeforeEach
-    void setUp() throws Exception {
-        jwtService = new JwtService();
-        setField(jwtService, "secret", SECRET);
-        setField(jwtService, "ttlMinutes", 1L);
+    void setUp() {
+        jwtService = new JwtService(SECRET, 1);
     }
 
     @Test
-    void generateShouldReturnTokenExtractUsernameShouldMatch() {
-        User user = new User(
-                "ronald.reynolds66@example.com",
-                "ignored",
-                List.of(new SimpleGrantedAuthority("ADMIN"))
-        );
-
-        String token = jwtService.generate(user);
+    void generateTokenShouldReturnNonEmptyToken() {
+        TokenUserDTO user = createTestUser();
+        String token = jwtService.generateToken(user);
 
         assertNotNull(token);
         assertFalse(token.isBlank());
-        assertEquals(user.getUsername(), jwtService.extractUsername(token));
+        assertEquals(3, token.split("\\.").length);
     }
 
     @Test
-    void isValidShouldBeTrueForSameUserAndNotExpired() {
-        User user = new User(
-                "u@example.com",
-                "ignored",
-                List.of(new SimpleGrantedAuthority("USER"))
+    void generateTokenShouldContainAllUserData() {
+        TokenUserDTO user = createTestUser();
+        String token = jwtService.generateToken(user);
+        TokenUserDTO extractedUser = jwtService.extractUser(token);
+
+        assertEquals(user.getId(), extractedUser.getId());
+        assertEquals(user.getName(), extractedUser.getName());
+        assertEquals(user.getEmail(), extractedUser.getEmail());
+        assertEquals(user.getRole(), extractedUser.getRole());
+    }
+
+    @Test
+    void generateTokenShouldCreateUniqueTokensForSameUser() {
+        TokenUserDTO user = createTestUser();
+
+        String token1 = jwtService.generateToken(user);
+        String token2 = jwtService.generateToken(user);
+
+        assertNotEquals(token1, token2);
+    }
+
+    @Test
+    void extractUserShouldReturnCorrectUserData() {
+        TokenUserDTO originalUser = new TokenUserDTO(
+                1, "ronald", "ronald.reynolds66@example.com", Role.USER
         );
 
-        String token = jwtService.generate(user);
+        String token = jwtService.generateToken(originalUser);
+        TokenUserDTO extractedUser = jwtService.extractUser(token);
 
-        assertTrue(jwtService.isValid(token, user));
+        assertAll(
+                () -> assertEquals(originalUser.getId(), extractedUser.getId()),
+                () -> assertEquals(originalUser.getName(), extractedUser.getName()),
+                () -> assertEquals(originalUser.getEmail(), extractedUser.getEmail()),
+                () -> assertEquals(originalUser.getRole(), extractedUser.getRole())
+        );
     }
 
     @Test
-    void isValidShouldBeFalseForDifferentUser() {
-        User user1 = new User("a@example.com", "x", List.of(new SimpleGrantedAuthority("USER")));
-        User user2 = new User("b@example.com", "x", List.of(new SimpleGrantedAuthority("USER")));
+    void isValidShouldReturnTrueForValidToken() {
+        TokenUserDTO user = createTestUser();
+        String token = jwtService.generateToken(user);
 
-        String token = jwtService.generate(user1);
-
-        assertTrue(jwtService.isValid(token, user1));
-        assertFalse(jwtService.isValid(token, user2));
+        assertTrue(jwtService.isValid(token));
     }
 
     @Test
-    void extractExpirationShouldBeInFutureForPositiveTtl() {
-        User user = new User("u@example.com", "x", List.of(new SimpleGrantedAuthority("USER")));
-        String token = jwtService.generate(user);
+    void isValidShouldReturnFalseForExpiredToken() throws InterruptedException {
+        JwtService expiredService = new JwtService(SECRET, 0L);
 
-        Date exp = jwtService.extractExpiration(token);
+        TokenUserDTO user = createTestUser();
+        String token = expiredService.generateToken(user);
 
-        assertNotNull(exp);
-        assertTrue(exp.after(new Date()));
+        Thread.sleep(1);
+
+        assertFalse(expiredService.isValid(token));
     }
 
     @Test
-    void isValidShouldBeFalseForExpiredToken() throws Exception {
-        JwtService service = new JwtService();
-        setField(service, "secret", SECRET);
-        setField(service, "ttlMinutes", 0L);
-
-        User user = new User("u@example.com", "x", List.of(new SimpleGrantedAuthority("USER")));
-        String token = service.generate(user);
-
-        Thread.sleep(5);
-
-        assertFalse(service.isValid(token, user));
+    void isValidShouldReturnFalseForInvalidToken() {
+        assertFalse(jwtService.isValid("invalid.token.here"));
+        assertFalse(jwtService.isValid(""));
+        assertFalse(jwtService.isValid(null));
     }
 
     @Test
-    void isValidShouldBeFalseForBrokenToken() {
-        User user = new User("u@example.com", "x", List.of(new SimpleGrantedAuthority("USER")));
-        assertFalse(jwtService.isValid("not-a-jwt", user));
+    void isValidShouldReturnFalseForTamperedToken() {
+        TokenUserDTO user = createTestUser();
+        String token = jwtService.generateToken(user);
+
+        String tamperedToken = token + "a";
+
+        assertFalse(jwtService.isValid(tamperedToken));
     }
 
     @Test
-    void extractUsernameShouldThrowForBrokenToken() {
-        assertThrows(Exception.class, () -> jwtService.extractUsername("not-a-jwt"));
+    void isValidShouldReturnFalseForWrongSecretToken() {
+        JwtService otherService = new JwtService("anotherSecretKeyThatIsDifferent123456", 1L);
+
+        TokenUserDTO user = createTestUser();
+        String token = otherService.generateToken(user);
+
+        assertFalse(jwtService.isValid(token));
     }
 
     @Test
-    void tokenShouldNotValidateIfSecretIsDifferent() throws Exception {
-        User user = new User("u@example.com", "x", List.of(new SimpleGrantedAuthority("USER")));
-        String token = jwtService.generate(user);
+    void refreshTokenShouldReturnNewValidToken() {
+        TokenUserDTO user = createTestUser();
+        String oldToken = jwtService.generateToken(user);
+        String newToken = jwtService.refreshToken(oldToken);
 
-        JwtService service2 = new JwtService();
-        setField(service2, "secret", "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa");
-        setField(service2, "ttlMinutes", 1L);
-
-        assertFalse(service2.isValid(token, user));
+        assertNotNull(newToken);
+        assertNotEquals(oldToken, newToken);
+        assertTrue(jwtService.isValid(newToken));
     }
 
-    private static void setField(Object target, String fieldName, Object value) throws Exception {
-        Field f = target.getClass().getDeclaredField(fieldName);
-        f.setAccessible(true);
-        f.set(target, value);
+    @Test
+    void refreshTokenShouldPreserveUserData() {
+        TokenUserDTO originalUser = createTestUser();
+        String oldToken = jwtService.generateToken(originalUser);
+        String newToken = jwtService.refreshToken(oldToken);
+
+        TokenUserDTO refreshedUser = jwtService.extractUser(newToken);
+
+        assertEquals(originalUser.getId(), refreshedUser.getId());
+        assertEquals(originalUser.getEmail(), refreshedUser.getEmail());
+        assertEquals(originalUser.getRole(), refreshedUser.getRole());
+    }
+
+    @Test
+    void refreshTokenShouldCreateTokenWithNewExpiration() {
+        TokenUserDTO user = createTestUser();
+        String oldToken = jwtService.generateToken(user);
+        String newToken = jwtService.refreshToken(oldToken);
+
+        assertTrue(jwtService.isValid(newToken));
+    }
+
+    @Test
+    void refreshTokenShouldFailForInvalidToken() {
+        assertThrows(Exception.class, () -> {
+            jwtService.refreshToken("invalid.token.here");
+        });
+    }
+
+    @Test
+    void tokenShouldWorkWithNullName() {
+        TokenUserDTO user = new TokenUserDTO(1, null, "test@example.com", Role.USER);
+        String token = jwtService.generateToken(user);
+
+        assertTrue(jwtService.isValid(token));
+        assertNull(jwtService.extractUser(token).getName());
+    }
+
+    @Test
+    void tokenShouldExpireExactlyAfterTtl() throws InterruptedException {
+        JwtService tinyTtlService = new JwtService(SECRET, 0L);
+
+        TokenUserDTO user = createTestUser();
+        String token = tinyTtlService.generateToken(user);
+
+        Thread.sleep(2);
+
+        assertFalse(tinyTtlService.isValid(token));
+    }
+
+    private TokenUserDTO createTestUser() {
+        return new TokenUserDTO(
+                1,
+                "ronald",
+                "ronald.reynolds66@example.com",
+                Role.USER
+        );
     }
 }

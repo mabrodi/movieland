@@ -25,6 +25,8 @@ services:
       SPRING_DATASOURCE_PASSWORD: postgres
       SPRING_JPA_HIBERNATE_DDL_AUTO: update
       SPRING_JPA_SHOW_SQL: "true"
+      SECURITY_JWT_SECRET: ${SECURITY_JWT_SECRET:-changemechangemechangemechangeme}
+      SECURITY_JWT_TTL: ${SECURITY_JWT_TTL:-60}
 
 volumes:
   pgdata:

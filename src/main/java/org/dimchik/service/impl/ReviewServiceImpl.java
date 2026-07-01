@@ -1,8 +1,8 @@
-package org.dimchik.service.base;
+package org.dimchik.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import org.dimchik.dto.ReviewDTO;
-import org.dimchik.dto.UserDTO;
+import org.dimchik.dto.UserShortDTO;
 import org.dimchik.entity.Movie;
 import org.dimchik.entity.Review;
 import org.dimchik.entity.User;
@@ -16,7 +16,7 @@ import org.springframework.stereotype.Service;
 
 @Service
 @RequiredArgsConstructor
-public class ReviewServiceBase implements ReviewService {
+public class ReviewServiceImpl implements ReviewService {
     private final ReviewRepository reviewRepository;
     private final MovieRepository movieRepository;
     private final UserRepository userRepository;
@@ -34,7 +34,7 @@ public class ReviewServiceBase implements ReviewService {
         review.setComment(request.getText());
         Review createdReview = reviewRepository.save(review);
 
-        UserDTO userDTO = new UserDTO(review.getAuthor().getId(), review.getAuthor().getName());
+        UserShortDTO userDTO = new UserShortDTO(review.getAuthor().getId(), review.getAuthor().getName());
 
         return new ReviewDTO(createdReview.getId(), createdReview.getComment(), userDTO);
     }

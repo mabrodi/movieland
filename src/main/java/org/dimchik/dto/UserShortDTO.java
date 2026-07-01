@@ -6,10 +6,7 @@ import lombok.*;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class RateDTO {
+public class UserShortDTO {
     private long id;
     private String name;
-    private String currency;
-    private double rate;
 }
-

@@ -1,10 +1,12 @@
 package org.dimchik.entity;
 
 import jakarta.persistence.*;
-import lombok.Data;
-import org.dimchik.common.enums.Role;
+import lombok.Getter;
+import lombok.Setter;
+import org.dimchik.enums.Role;
 
-@Data
+@Getter
+@Setter
 @Entity
 @Table(name = "users")
 public class User {

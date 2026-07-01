@@ -1,7 +1,7 @@
 package org.dimchik.config;
 
 import lombok.RequiredArgsConstructor;
-import org.dimchik.filter.JwtAuthFilter;
+import org.dimchik.security.AuthFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -12,7 +12,6 @@ import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
@@ -23,8 +22,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 @EnableWebSecurity
 @RequiredArgsConstructor
 public class SecurityConfig {
-    private final UserDetailsService userDetailsService;
-    private final JwtAuthFilter jwtAuthFilter;
+    private final AuthFilter authFilter;
 
     @Bean
     SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -35,18 +33,18 @@ public class SecurityConfig {
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .logout(AbstractHttpConfigurer::disable)
 
-                .userDetailsService(userDetailsService)
-
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.DELETE, "/api/v1/logout").authenticated()
-                        .requestMatchers(HttpMethod.POST, "/api/v1/movie").authenticated()
-                        .requestMatchers(HttpMethod.PUT, "/api/v1/movie/**").authenticated()
-                        .requestMatchers(HttpMethod.POST, "/api/v1/review").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/login").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/genres").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/movies").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/movies/*").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/movies/random").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/v1/movies/genre/*").permitAll()
 
-                        .anyRequest().permitAll()
+                        .anyRequest().authenticated()
                 )
 
-                .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(authFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
 

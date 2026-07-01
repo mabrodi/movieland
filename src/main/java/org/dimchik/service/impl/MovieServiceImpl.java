@@ -1,9 +1,9 @@
-package org.dimchik.service.base;
+package org.dimchik.service.impl;
 
 import lombok.AllArgsConstructor;
-import org.dimchik.common.enums.Currency;
-import org.dimchik.dto.MovieDTO;
-import org.dimchik.dto.MovieFullDTO;
+import org.dimchik.enums.Currency;
+import org.dimchik.web.response.MovieDetailResponse;
+import org.dimchik.web.response.MovieResponse;
 import org.dimchik.entity.Country;
 import org.dimchik.entity.Genre;
 import org.dimchik.entity.Movie;
@@ -15,13 +15,12 @@ import org.dimchik.repository.PosterRepository;
 import org.dimchik.repository.mapper.MovieMapper;
 import org.dimchik.repository.specification.MovieSortSpecification;
 import org.dimchik.service.MovieService;
+import org.dimchik.enums.SortDirection;
 import org.dimchik.service.cache.MovieCacheService;
 import org.dimchik.service.cache.RateCacheService;
 import org.dimchik.service.enrichment.MovieEnrichmentService;
 import org.dimchik.web.exception.ResourceNotFoundException;
 import org.dimchik.web.request.CreateMovieRequest;
-import org.dimchik.web.request.MovieByIdRequest;
-import org.dimchik.web.request.MovieRequest;
 import org.dimchik.web.request.UpdateMovieRequest;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -32,7 +31,7 @@ import java.util.List;
 
 @AllArgsConstructor
 @Service
-public class MovieServiceBase implements MovieService {
+public class MovieServiceImpl implements MovieService {
     private final MovieRepository movieRepository;
     private final MovieMapper movieMapper;
     private final MovieEnrichmentService movieEnrichmentService;
@@ -43,23 +42,24 @@ public class MovieServiceBase implements MovieService {
     private final GenreRepository genreRepository;
 
     @Override
-    public List<MovieDTO> findAll(MovieRequest request) {
-        Sort sort = MovieSortSpecification.build(request.getRatingSortDirection(), request.getPriceSortDirection());
+    public List<MovieResponse> findAll(SortDirection ratingSortDirection, SortDirection priceSortDirection) {
+        Sort sort = MovieSortSpecification.build(ratingSortDirection, priceSortDirection);
         List<Movie> movieList = movieRepository.findAll(sort);
 
-        return convertToDtoList(movieList);
+        return convertToResponseList(movieList);
     }
 
-    public MovieFullDTO findById(long id, MovieByIdRequest request) {
+    @Override
+    public MovieDetailResponse findById(long id, Currency currency) {
         Movie movie = movieCacheService.getMovie(id);
         if (movie == null) {
             throw new ResourceNotFoundException("Movie not found with id: " + id);
         }
 
-        MovieFullDTO dto = movieEnrichmentService.enrich(movie);
-        if (request.getCurrency() != Currency.UAH) {
+        MovieDetailResponse dto = movieEnrichmentService.enrich(movie);
+        if (currency != Currency.UAH) {
             rateCacheService.findAll().stream()
-                    .filter(rate -> request.getCurrency().name().equals(rate.getCurrency()))
+                    .filter(rate -> currency.name().equals(rate.getCurrency()))
                     .findFirst()
                     .ifPresent(rate -> dto.setPrice(dto.getPrice() * rate.getRate()));
         }
@@ -69,14 +69,14 @@ public class MovieServiceBase implements MovieService {
 
 
     @Override
-    public List<MovieDTO> random(int count) {
-        List<MovieDTO> movieResponseDTOList;
+    public List<MovieResponse> random(int count) {
+        List<MovieResponse> movieResponseDTOList;
 
         List<Movie> movieList = movieRepository.findAll();
         if (!movieList.isEmpty()) {
             Collections.shuffle(movieList);
             movieResponseDTOList = movieList.stream()
-                    .map(movieMapper::toDto)
+                    .map(movieMapper::toResponse)
                     .limit(count)
                     .toList();
         } else {
@@ -87,16 +87,16 @@ public class MovieServiceBase implements MovieService {
     }
 
     @Override
-    public List<MovieDTO> findByGenreId(long genreId) {
+    public List<MovieResponse> findByGenreId(long genreId) {
         List<Movie> movieList = movieRepository.findMoviesByGenreId(genreId);
 
-        return convertToDtoList(movieList);
+        return convertToResponseList(movieList);
     }
 
 
     @Transactional
     @Override
-    public MovieFullDTO create(CreateMovieRequest request) {
+    public MovieDetailResponse create(CreateMovieRequest request) {
         Movie movie = movieMapper.toEntity(request);
 
         applyGenres(movie, request.getGenres());
@@ -106,12 +106,12 @@ public class MovieServiceBase implements MovieService {
         Movie createdMovie = movieRepository.save(movie);
         movieCacheService.updateMovie(createdMovie);
 
-        return movieMapper.toFullDto(createdMovie);
+        return movieMapper.toDetailResponse(createdMovie);
     }
 
     @Transactional
     @Override
-    public MovieFullDTO update(long id, UpdateMovieRequest request) {
+    public MovieDetailResponse update(long id, UpdateMovieRequest request) {
         Movie movie = movieRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Movie not found with id: " + id));
 
@@ -124,7 +124,7 @@ public class MovieServiceBase implements MovieService {
         Movie updatedMovie = movieRepository.save(movie);
         movieCacheService.updateMovie(updatedMovie);
 
-        return movieMapper.toFullDto(updatedMovie);
+        return movieMapper.toDetailResponse(updatedMovie);
     }
 
 
@@ -167,12 +167,12 @@ public class MovieServiceBase implements MovieService {
     }
 
 
-    private List<MovieDTO> convertToDtoList(List<Movie> movies) {
+    private List<MovieResponse> convertToResponseList(List<Movie> movies) {
         if (movies == null || movies.isEmpty()) {
             return Collections.emptyList();
         }
         return movies.stream()
-                .map(movieMapper::toDto)
+                .map(movieMapper::toResponse)
                 .toList();
     }
 }

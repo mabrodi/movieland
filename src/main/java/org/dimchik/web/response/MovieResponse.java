@@ -1,15 +1,13 @@
-package org.dimchik.dto;
+package org.dimchik.web.response;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import lombok.*;
 
 @Builder
-@Data
+@Getter
+@Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class MovieDTO {
+public class MovieResponse {
     private long id;
     private String nameRussian;
     private String nameNative;

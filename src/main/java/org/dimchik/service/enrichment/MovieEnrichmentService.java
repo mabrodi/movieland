@@ -3,6 +3,8 @@ package org.dimchik.service.enrichment;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.dimchik.dto.*;
+import org.dimchik.dto.CountryDTO;
+import org.dimchik.web.response.MovieDetailResponse;
 import org.dimchik.entity.Country;
 import org.dimchik.entity.Genre;
 import org.dimchik.entity.Movie;
@@ -14,7 +16,6 @@ import org.dimchik.repository.mapper.MovieMapper;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.*;
@@ -33,8 +34,8 @@ public class MovieEnrichmentService {
 
     private final ExecutorService executor = Executors.newCachedThreadPool();
 
-    public MovieFullDTO enrich(Movie movie) {
-        MovieFullDTO dto = movieMapper.toFullDto(movie);
+    public MovieDetailResponse enrich(Movie movie) {
+        MovieDetailResponse dto = movieMapper.toDetailResponse(movie);
 
         Callable<List<GenreDTO>> genresTask = () -> loadGenres(movie.getId());
         Callable<List<CountryDTO>> countriesTask = () -> loadCountries(movie.getId());
@@ -116,7 +117,7 @@ public class MovieEnrichmentService {
                         }
                     })
                     .map(review -> {
-                        UserDTO user = new UserDTO(
+                        UserShortDTO user = new UserShortDTO(
                                 review.getAuthor().getId(),
                                 review.getAuthor().getName()
                         );

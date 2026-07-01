@@ -1,5 +1,3 @@
-user.timezone: Europe/Kyiv
-
 spring:
     application:
         name: movie-land
@@ -27,13 +25,9 @@ server:
 
 cache:
     genre:
-        refresh-interval: 4h
+        refresh-cron: "0 0 */4 * * *" #every 4h
     rate:
-        refresh-cron: "0 0 0 * * *"
-
-session:
-    ttl: 120m
-    cleanup-interval: 5m
+        refresh-cron: "0 30 15 * * *" #every day 15:30
 
 client:
     rate:
@@ -48,5 +42,5 @@ logging:
 
 security:
     jwt:
-        secret: ${SECURITY_JWT_SECRET}
-        ttl-minutes: ${SECURITY_JWT_TTL}
+        secret: ${SECURITY_JWT_SECRET:his-is-a-very-long-secret-key-that-is-at-least-256-bits-long-for-hmac-sha256}
+        ttl-minutes: ${SECURITY_JWT_TTL:15}

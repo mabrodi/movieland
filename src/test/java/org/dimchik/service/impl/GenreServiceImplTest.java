@@ -1,8 +1,7 @@
-package org.dimchik.service.base;
+package org.dimchik.service.impl;
 
 import org.dimchik.dto.GenreDTO;
 import org.dimchik.repository.GenreRepository;
-import org.dimchik.service.GenreService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -16,15 +15,15 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
-class GenreServiceBaseTest {
-    private GenreService genreService;
+class GenreServiceImplTest {
+    private GenreServiceImpl genreService;
 
     @Mock
     private GenreRepository genreRepository;
 
     @BeforeEach
     void setUp() {
-        genreService = new GenreServiceBase(genreRepository);
+        genreService = new GenreServiceImpl(genreRepository);
     }
 
     @Test
@@ -43,11 +42,6 @@ class GenreServiceBaseTest {
 
         List<GenreDTO> result = genreService.findAll();
 
-        assertThat(result)
-                .hasSize(2)
-                .containsExactly(
-                        new GenreDTO(1L, "Action"),
-                        new GenreDTO(2L, "Comedy")
-                );
+        assertThat(result).hasSize(2).containsExactly(genre1, genre2);
     }
 }

@@ -2,41 +2,34 @@ package org.dimchik.service.cache;
 
 
 import jakarta.annotation.PostConstruct;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.dimchik.client.RateClient;
+import org.dimchik.client.NBURateClient;
 import org.dimchik.dto.RateDTO;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
-import java.util.concurrent.CopyOnWriteArrayList;
 
 @Slf4j
 @Service
+@RequiredArgsConstructor
 public class RateCacheService {
-    private volatile List<RateDTO> list = List.of();
-    private final RateClient rateClient;
-
-    public RateCacheService(RateClient rateClient) {
-        this.rateClient = rateClient;
-    }
+    private volatile List<RateDTO> list;
+    private final NBURateClient rateClient;
 
     public List<RateDTO> findAll() {
-        return new CopyOnWriteArrayList<>(list);
+        return Collections.unmodifiableList(list);
     }
 
     @PostConstruct
-    private void init() {
-        log.info("Initializing Rate cache on application startup");
-        update();
-    }
-
     @Scheduled(cron = "${cache.rate.refresh-cron}")
     private void update() {
         try {
             List<RateDTO> rates = rateClient.findAll();
 
-            if (rates == null || rates.isEmpty()) {
+            if (rates.isEmpty()) {
                 log.warn("rateClient returned empty list, keeping previous cache");
                 return;
             }
