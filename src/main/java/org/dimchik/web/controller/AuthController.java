@@ -5,6 +5,8 @@ import lombok.RequiredArgsConstructor;
 import org.dimchik.web.response.TokenResponse;
 import org.dimchik.service.AuthService;
 import org.dimchik.web.request.LoginRequest;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -19,7 +21,13 @@ public class AuthController {
     }
 
     @PostMapping("/refresh")
-    public TokenResponse refresh(@RequestHeader("Authorization") String authorization) {
+    public TokenResponse refresh(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorization) {
         return authService.refresh(authorization);
+    }
+
+    @DeleteMapping("/logout")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void logout(@RequestHeader(HttpHeaders.AUTHORIZATION) String authorization) {
+        authService.logout(authorization);
     }
 }

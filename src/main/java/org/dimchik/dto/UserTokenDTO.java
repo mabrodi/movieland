@@ -8,7 +8,7 @@ import org.dimchik.enums.Role;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class TokenUserDTO {
+public class UserTokenDTO {
     private long id;
     private String name;
     private String email;

@@ -3,7 +3,7 @@ package org.dimchik.security;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import org.dimchik.enums.Role;
-import org.dimchik.dto.TokenUserDTO;
+import org.dimchik.dto.UserTokenDTO;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -19,13 +19,13 @@ public class JwtService {
 
     public JwtService(
             @Value("${security.jwt.secret}") String secret,
-            @Value("${security.jwt.ttl-minutes}") long ttl
+            @Value("${security.jwt.ttl-seconds}") long ttl
     ) {
         this.signingKey = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
         this.tokenTtl = ttl * 60 * 1000L;
     }
 
-    public String generateToken(TokenUserDTO user) {
+    public String generateToken(UserTokenDTO user) {
         Date now = new Date();
         Date expiration = new Date(now.getTime() + tokenTtl);
 
@@ -41,8 +41,8 @@ public class JwtService {
                 .compact();
     }
 
-    public TokenUserDTO extractUser(String token) {
-        return TokenUserDTO.builder()
+    public UserTokenDTO extractUser(String token) {
+        return UserTokenDTO.builder()
                 .id(parseToken(token).get("userId", Long.class))
                 .name(parseToken(token).get("name", String.class))
                 .email(parseToken(token).getSubject())
@@ -60,8 +60,8 @@ public class JwtService {
     }
 
     public String refreshToken(String token) {
-        TokenUserDTO extractUserFromToken = extractUser(token);
-        TokenUserDTO dto = TokenUserDTO.builder()
+        UserTokenDTO extractUserFromToken = extractUser(token);
+        UserTokenDTO dto = UserTokenDTO.builder()
                 .id(extractUserFromToken.getId())
                 .email(extractUserFromToken.getEmail())
                 .role(extractUserFromToken.getRole())

@@ -1,8 +1,10 @@
 package org.dimchik.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.dimchik.security.TokenBlackListService;
+import org.dimchik.utils.BearerTokenUtils;
 import org.dimchik.web.response.TokenResponse;
-import org.dimchik.dto.TokenUserDTO;
+import org.dimchik.dto.UserTokenDTO;
 import org.dimchik.entity.User;
 import org.dimchik.repository.UserRepository;
 import org.dimchik.security.JwtService;
@@ -20,6 +22,7 @@ public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
+    private final TokenBlackListService tokenBlackListService;
 
     @Override
     public TokenResponse login(LoginRequest request) {
@@ -30,7 +33,7 @@ public class AuthServiceImpl implements AuthService {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Invalid credentials");
         }
 
-        TokenUserDTO dto = TokenUserDTO.builder()
+        UserTokenDTO dto = UserTokenDTO.builder()
                 .id(user.getId())
                 .email(user.getEmail())
                 .role(user.getRole())
@@ -43,18 +46,20 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public TokenResponse refresh(String authorization) {
-        if (authorization == null || !authorization.startsWith("Bearer ")) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Missing Bearer token");
-        }
-        String oldToken = authorization.substring(7);
-
-
-        if (!jwtService.isValid(oldToken)) {
+        String oldToken = BearerTokenUtils.extractToken(authorization);
+        if (tokenBlackListService.contains(oldToken) && !jwtService.isValid(oldToken)) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Token expired or invalid");
         }
 
         String newToken = jwtService.refreshToken(oldToken);
+        tokenBlackListService.add(oldToken);
 
         return new TokenResponse(newToken, "Bearer");
     }
+
+    @Override
+    public void logout(String authorization) {
+        tokenBlackListService.add(BearerTokenUtils.extractToken(authorization));
+    }
+
 }
