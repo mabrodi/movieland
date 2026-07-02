@@ -4,7 +4,7 @@ package org.dimchik.service.cache;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.dimchik.client.NBURateClient;
+import org.dimchik.client.NbuRateClient;
 import org.dimchik.dto.RateDTO;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
@@ -17,7 +17,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class RateCacheService {
     private volatile List<RateDTO> list;
-    private final NBURateClient rateClient;
+    private final NbuRateClient rateClient;
 
     public List<RateDTO> findAll() {
         return Collections.unmodifiableList(list);
