@@ -1,105 +1,88 @@
 package org.dimchik.service.cache;
 
 import org.dimchik.entity.Movie;
-import org.dimchik.repository.MovieRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.*;
-import org.mockito.junit.jupiter.MockitoExtension;
-
-import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.*;
 
-@ExtendWith(MockitoExtension.class)
 class MovieCacheServiceTest {
 
-    @Mock
-    private MovieRepository movieRepository;
-
-    @InjectMocks
     private MovieCacheService movieCacheService;
 
-    private Movie movie;
+    private Movie movie1;
+    private Movie movie2;
 
     @BeforeEach
     void setUp() {
-        movie = new Movie();
-        movie.setId(1L);
-        movie.setNameRussian("Побег из Шоушенка");
+        movieCacheService = new MovieCacheService();
+
+        movie1 = new Movie();
+        movie1.setId(1L);
+        movie1.setNameRussian("Побег из Шоушенка");
+
+        movie2 = new Movie();
+        movie2.setId(2L);
+        movie2.setNameRussian("Крестный отец");
     }
 
     @Test
-    void getMovieShouldLoadFromDbAndPutToCacheWhenNotCached() {
-        when(movieRepository.findById(1L)).thenReturn(Optional.of(movie));
+    void addShouldStoreMovieInCache() {
+        movieCacheService.add(movie1);
 
-        Movie result1 = movieCacheService.getMovie(1L);
-        Movie result2 = movieCacheService.getMovie(1L);
-
-        assertThat(result1).isSameAs(movie);
-        assertThat(result2).isSameAs(movie);
-
-        verify(movieRepository, times(1)).findById(1L);
+        assertThat(movieCacheService.getById(1L)).isSameAs(movie1);
     }
 
     @Test
-    void getMovieShouldReturnNullWhenMovieNotFound() {
-        when(movieRepository.findById(99L)).thenReturn(Optional.empty());
-
-        Movie result = movieCacheService.getMovie(99L);
-
-        assertThat(result).isNull();
-        verify(movieRepository).findById(99L);
-    }
-
-    @Test
-    void getMovieShouldReturnCachedValueWithoutCallingRepository() {
-        when(movieRepository.findById(1L)).thenReturn(Optional.of(movie));
-
-        Movie first = movieCacheService.getMovie(1L);
-        Movie second = movieCacheService.getMovie(1L);
-
-        assertThat(first).isSameAs(movie);
-        assertThat(second).isSameAs(movie);
-
-        verify(movieRepository, times(1)).findById(1L);
-    }
-
-    @Test
-    void updateMovieShouldUpdateDbAndCacheWhenMovieIsCached() {
-        when(movieRepository.findById(1L)).thenReturn(Optional.of(movie));
-
-        movieCacheService.getMovie(1L);
-
+    void addShouldOverwriteExistingMovie() {
         Movie updated = new Movie();
         updated.setId(1L);
-        updated.setNameRussian("Обновлённое название");
+        updated.setNameRussian("Побег из Шоушенка (обновлённый)");
 
-        movieCacheService.updateMovie(updated);
+        movieCacheService.add(movie1);
+        movieCacheService.add(updated);
 
-        verify(movieRepository).save(updated);
-
-        Movie cachedAfterUpdate = movieCacheService.getMovie(1L);
-        assertThat(cachedAfterUpdate).isSameAs(updated);
+        assertThat(movieCacheService.getById(1L)).isSameAs(updated);
+        assertThat(movieCacheService.getById(1L).getNameRussian()).isEqualTo("Побег из Шоушенка (обновлённый)");
     }
 
     @Test
-    void updateMovieShouldUpdateDbOnlyWhenMovieNotCached() {
-        Movie updated = new Movie();
-        updated.setId(2L);
-        updated.setNameRussian("Новый фильм");
+    void getByIdShouldReturnNullForMissingId() {
+        assertThat(movieCacheService.getById(999L)).isNull();
+    }
 
-        movieCacheService.updateMovie(updated);
+    @Test
+    void getByIdShouldReturnCorrectMovieForEachId() {
+        movieCacheService.add(movie1);
+        movieCacheService.add(movie2);
 
-        verify(movieRepository).save(updated);
+        assertThat(movieCacheService.getById(1L)).isSameAs(movie1);
+        assertThat(movieCacheService.getById(2L)).isSameAs(movie2);
+    }
 
-        when(movieRepository.findById(2L)).thenReturn(Optional.of(updated));
+    @Test
+    void invalidateShouldRemoveMovieFromCache() {
+        movieCacheService.add(movie1);
+        movieCacheService.invalidate(1L);
 
-        Movie result = movieCacheService.getMovie(2L);
-        assertThat(result).isSameAs(updated);
+        assertThat(movieCacheService.getById(1L)).isNull();
+    }
 
-        verify(movieRepository).findById(2L);
+    @Test
+    void invalidateShouldNotAffectOtherMovies() {
+        movieCacheService.add(movie1);
+        movieCacheService.add(movie2);
+
+        movieCacheService.invalidate(1L);
+
+        assertThat(movieCacheService.getById(1L)).isNull();
+        assertThat(movieCacheService.getById(2L)).isSameAs(movie2);
+    }
+
+    @Test
+    void invalidateNonExistentMovieShouldNotThrow() {
+        assertThat(movieCacheService.getById(999L)).isNull();
+        movieCacheService.invalidate(999L);
+        assertThat(movieCacheService.getById(999L)).isNull();
     }
 }

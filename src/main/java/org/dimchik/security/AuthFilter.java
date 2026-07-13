@@ -5,7 +5,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.dimchik.dto.UserTokenDTO;
+import org.dimchik.dto.UserToken;
 import org.dimchik.utils.BearerTokenUtils;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -37,10 +37,10 @@ public class AuthFilter extends OncePerRequestFilter {
         String token = BearerTokenUtils.extractToken(header);
 
         try {
-            if (tokenBlackListService.contains(token)
+            if (!tokenBlackListService.contains(token)
                     && jwtService.isValid(token)
                     && SecurityContextHolder.getContext().getAuthentication() == null) {
-                UserTokenDTO userDTO = jwtService.extractUser(token);
+                UserToken userDTO = jwtService.extractUser(token);
 
                 UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
                         userDTO.getEmail(),

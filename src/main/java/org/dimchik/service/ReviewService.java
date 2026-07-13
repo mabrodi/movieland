@@ -1,9 +1,13 @@
 package org.dimchik.service;
 
-import org.dimchik.dto.ReviewDTO;
-import org.dimchik.web.request.CreateReviewRequest;
+import org.dimchik.dto.response.ReviewResponse;
+import org.dimchik.entity.Movie;
+import org.dimchik.entity.Review;
+import org.dimchik.dto.request.CreateReviewRequest;
 import org.springframework.security.core.userdetails.UserDetails;
 
 public interface ReviewService {
-    ReviewDTO create(CreateReviewRequest request, UserDetails user);
+    ReviewResponse create(CreateReviewRequest request, UserDetails user);
+
+    void enrichSingleMovieByReviewes(Movie movie);
 }

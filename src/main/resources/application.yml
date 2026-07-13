@@ -14,6 +14,10 @@ spring:
             hibernate:
                 dialect: org.hibernate.dialect.PostgreSQLDialect
                 format_sql: true
+                javax:
+                    cache:
+                        provider: org.ehcache.jsr107.EhcacheCachingProvider
+                        uri: classpath:ehcache.xml
 
     flyway:
         enabled: true
@@ -24,8 +28,6 @@ server:
     port: ${PORT:8080}
 
 cache:
-    genre:
-        refresh-cron: "0 0 */4 * * *" #every 4h
     rate:
         refresh-cron: "0 30 15 * * *" #every day 15:30
 
@@ -33,9 +35,11 @@ client:
     rate:
         url: ${CLIENT_RATE_URL}
 
-movie:
+
+
+concurrent:
     enrichment:
-        timeout-seconds: 25
+        timeout: 5
 
 logging:
     config: classpath:logback-spring.xml

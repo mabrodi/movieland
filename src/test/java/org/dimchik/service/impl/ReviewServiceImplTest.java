@@ -1,19 +1,25 @@
 package org.dimchik.service.impl;
 
-import org.dimchik.dto.ReviewDTO;
+import org.dimchik.dto.request.CreateReviewRequest;
+import org.dimchik.dto.response.ReviewResponse;
+import org.dimchik.dto.response.UserResponse;
 import org.dimchik.entity.Movie;
 import org.dimchik.entity.Review;
+import org.dimchik.entity.User;
 import org.dimchik.repository.MovieRepository;
 import org.dimchik.repository.ReviewRepository;
 import org.dimchik.repository.UserRepository;
-import org.dimchik.web.request.CreateReviewRequest;
+import org.dimchik.web.exception.MovieNotFoundException;
+import org.dimchik.web.exception.UserNotFoundException;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.*;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.User;
 
 import java.util.List;
 import java.util.Optional;
@@ -24,43 +30,51 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class ReviewServiceImplTest {
 
-    @Mock private ReviewRepository reviewRepository;
-    @Mock private MovieRepository movieRepository;
-    @Mock private UserRepository userRepository;
+    @Mock
+    private ReviewRepository reviewRepository;
+    @Mock
+    private MovieRepository movieRepository;
+    @Mock
+    private UserRepository userRepository;
 
     @InjectMocks
     private ReviewServiceImpl reviewService;
 
-    @Test
-    void createShouldSaveReviewAndReturnDto() {
-        CreateReviewRequest request = new CreateReviewRequest();
-        request.setMovieId(10L);
-        request.setText("очень крутой фильм");
+    private Movie movie;
+    private User dbUser;
+    private CreateReviewRequest request;
 
-        Movie movie = new Movie();
+    @BeforeEach
+    void setUp() {
+        movie = new Movie();
         movie.setId(10L);
+        movie.setNameRussian("Побег из Шоушенка");
 
-        org.dimchik.entity.User dbUser = new org.dimchik.entity.User();
+        dbUser = new User();
         dbUser.setId(7L);
         dbUser.setName("Ronald");
         dbUser.setEmail("ronald@example.com");
 
-        UserDetails principal = new User(
-                "ronald@example.com",
-                "ignored",
-                List.of(new SimpleGrantedAuthority("USER"))
+        request = new CreateReviewRequest();
+        request.setMovieId(10L);
+        request.setText("очень крутой фильм");
+    }
+
+    @Test
+    void createShouldSaveReviewAndReturnResponse() {
+        UserDetails principal = new org.springframework.security.core.userdetails.User(
+                "ronald@example.com", "ignored", List.of(new SimpleGrantedAuthority("USER"))
         );
 
         when(movieRepository.findById(10L)).thenReturn(Optional.of(movie));
         when(userRepository.findByEmail("ronald@example.com")).thenReturn(Optional.of(dbUser));
-
         when(reviewRepository.save(any(Review.class))).thenAnswer(inv -> {
             Review r = inv.getArgument(0);
             r.setId(123L);
             return r;
         });
 
-        ReviewDTO result = reviewService.create(request, principal);
+        ReviewResponse result = reviewService.create(request, principal);
 
         assertThat(result).isNotNull();
         assertThat(result.getId()).isEqualTo(123L);
@@ -84,16 +98,15 @@ class ReviewServiceImplTest {
 
     @Test
     void createShouldThrowWhenMovieNotFound() {
-        CreateReviewRequest request = new CreateReviewRequest();
-        request.setMovieId(999L);
-        request.setText("text");
-
-        UserDetails principal = new User("u@example.com", "x", List.of());
+        UserDetails principal = new org.springframework.security.core.userdetails.User(
+                "u@example.com", "x", List.of()
+        );
 
         when(movieRepository.findById(999L)).thenReturn(Optional.empty());
+        request.setMovieId(999L);
 
         assertThatThrownBy(() -> reviewService.create(request, principal))
-                .isInstanceOf(IllegalArgumentException.class)
+                .isInstanceOf(MovieNotFoundException.class)
                 .hasMessageContaining("Movie not found with id: 999");
 
         verify(movieRepository).findById(999L);
@@ -102,24 +115,50 @@ class ReviewServiceImplTest {
 
     @Test
     void createShouldThrowWhenUserNotFound() {
-        CreateReviewRequest request = new CreateReviewRequest();
-        request.setMovieId(10L);
-        request.setText("text");
-
-        Movie movie = new Movie();
-        movie.setId(10L);
-
-        UserDetails principal = new User("missing@example.com", "x", List.of());
+        UserDetails principal = new org.springframework.security.core.userdetails.User(
+                "missing@example.com", "x", List.of()
+        );
 
         when(movieRepository.findById(10L)).thenReturn(Optional.of(movie));
         when(userRepository.findByEmail("missing@example.com")).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> reviewService.create(request, principal))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("User not found with id: missing@example.com");
+                .isInstanceOf(UserNotFoundException.class)
+                .hasMessageContaining("User not found: missing@example.com");
 
         verify(movieRepository).findById(10L);
         verify(userRepository).findByEmail("missing@example.com");
         verifyNoInteractions(reviewRepository);
+    }
+
+    @Test
+    void enrichSingleMovieByReviewesShouldSetReviewsOnMovie() {
+        Review review1 = new Review();
+        review1.setId(1L);
+        review1.setComment("Отличный фильм");
+        Review review2 = new Review();
+        review2.setId(2L);
+        review2.setComment("Шедевр");
+
+        when(reviewRepository.findAllByMovieId(10L)).thenReturn(List.of(review1, review2));
+
+        reviewService.enrichSingleMovieByReviewes(movie);
+
+        assertThat(movie.getReviews()).hasSize(2).containsExactly(review1, review2);
+        verify(reviewRepository).findAllByMovieId(10L);
+    }
+
+    @Test
+    void enrichSingleMovieByReviewesShouldNotSetWhenThreadInterrupted() {
+        Thread.currentThread().interrupt();
+
+        try {
+            reviewService.enrichSingleMovieByReviewes(movie);
+            assertThat(movie.getReviews()).isNull();
+        } finally {
+            Thread.interrupted();
+        }
+
+        verify(reviewRepository).findAllByMovieId(10L);
     }
 }

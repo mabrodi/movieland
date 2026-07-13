@@ -1,8 +1,9 @@
 package org.dimchik.service.impl;
 
 import lombok.RequiredArgsConstructor;
-import org.dimchik.dto.ReviewDTO;
-import org.dimchik.dto.UserShortDTO;
+import lombok.extern.slf4j.Slf4j;
+import org.dimchik.dto.response.ReviewResponse;
+import org.dimchik.dto.response.UserResponse;
 import org.dimchik.entity.Movie;
 import org.dimchik.entity.Review;
 import org.dimchik.entity.User;
@@ -10,10 +11,15 @@ import org.dimchik.repository.MovieRepository;
 import org.dimchik.repository.ReviewRepository;
 import org.dimchik.repository.UserRepository;
 import org.dimchik.service.ReviewService;
-import org.dimchik.web.request.CreateReviewRequest;
+import org.dimchik.web.exception.MovieNotFoundException;
+import org.dimchik.web.exception.UserNotFoundException;
+import org.dimchik.dto.request.CreateReviewRequest;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ReviewServiceImpl implements ReviewService {
@@ -21,21 +27,33 @@ public class ReviewServiceImpl implements ReviewService {
     private final MovieRepository movieRepository;
     private final UserRepository userRepository;
 
-
     @Override
-    public ReviewDTO create(CreateReviewRequest request, UserDetails userDetails) {
+    public ReviewResponse create(CreateReviewRequest request, UserDetails userDetails) {
         Movie movie = movieRepository.findById(request.getMovieId())
-                .orElseThrow(() -> new IllegalArgumentException("Movie not found with id: " + request.getMovieId()));
+                .orElseThrow(() -> new MovieNotFoundException(request.getMovieId()));
         User user = userRepository.findByEmail(userDetails.getUsername())
-                .orElseThrow(() -> new IllegalArgumentException("User not found with id: " + userDetails.getUsername()));
+                .orElseThrow(() -> new UserNotFoundException(userDetails.getUsername()));
+
         Review review = new Review();
         review.setMovie(movie);
         review.setAuthor(user);
         review.setComment(request.getText());
+
         Review createdReview = reviewRepository.save(review);
+        UserResponse userResponse = new UserResponse(review.getAuthor().getId(), review.getAuthor().getName());
 
-        UserShortDTO userDTO = new UserShortDTO(review.getAuthor().getId(), review.getAuthor().getName());
+        return new ReviewResponse(createdReview.getId(), createdReview.getComment(), userResponse);
+    }
 
-        return new ReviewDTO(createdReview.getId(), createdReview.getComment(), userDTO);
+    @Override
+    public void enrichSingleMovieByReviewes(Movie movie) {
+        log.info("Start to enrich single movie by reviews");
+
+        List<Review> reviews = reviewRepository.findAllByMovieId(movie.getId());
+
+        if (!Thread.currentThread().isInterrupted()) {
+            movie.setReviews(reviews);
+            log.info("Finish to enrich single movie by reviews");
+        }
     }
 }

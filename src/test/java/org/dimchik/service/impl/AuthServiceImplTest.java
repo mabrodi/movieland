@@ -1,24 +1,27 @@
 package org.dimchik.service.impl;
 
-import org.dimchik.dto.TokenUserDTO;
+import org.dimchik.dto.UserToken;
 import org.dimchik.entity.User;
 import org.dimchik.enums.Role;
 import org.dimchik.repository.UserRepository;
-import org.dimchik.web.response.TokenResponse;
+import org.dimchik.dto.response.TokenResponse;
 import org.dimchik.security.JwtService;
-import org.dimchik.web.request.LoginRequest;
+import org.dimchik.security.TokenBlackListService;
+import org.dimchik.web.exception.InvalidCredentialsException;
+import org.dimchik.web.exception.TokenInvalidException;
+import org.dimchik.dto.request.LoginRequest;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.*;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.assertj.core.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.*;
 
@@ -33,6 +36,9 @@ class AuthServiceImplTest {
 
     @Mock
     private JwtService jwtService;
+
+    @Mock
+    private TokenBlackListService tokenBlackListService;
 
     @InjectMocks
     private AuthServiceImpl authService;
@@ -60,18 +66,21 @@ class AuthServiceImplTest {
                 .thenReturn(Optional.of(testUser));
         when(passwordEncoder.matches(loginRequest.getPassword(), testUser.getPassword()))
                 .thenReturn(true);
-        when(jwtService.generateToken(any(TokenUserDTO.class)))
+        when(jwtService.generateToken(any(UserToken.class)))
                 .thenReturn("test.jwt.token");
 
         TokenResponse response = authService.login(loginRequest);
 
-        assertNotNull(response);
-        assertEquals("test.jwt.token", response.getToken());
-        assertEquals("Bearer", response.getTokenType());
+        assertThat(response).isNotNull();
+        assertThat(response.getToken()).isEqualTo("test.jwt.token");
+        assertThat(response.getTokenType()).isEqualTo("Bearer");
 
-        verify(userRepository).findByEmail(loginRequest.getEmail());
-        verify(passwordEncoder).matches(loginRequest.getPassword(), testUser.getPassword());
-        verify(jwtService).generateToken(any(TokenUserDTO.class));
+        ArgumentCaptor<UserToken> captor = ArgumentCaptor.forClass(UserToken.class);
+        verify(jwtService).generateToken(captor.capture());
+        UserToken tokenPayload = captor.getValue();
+        assertThat(tokenPayload.getId()).isEqualTo(1L);
+        assertThat(tokenPayload.getEmail()).isEqualTo("test@example.com");
+        assertThat(tokenPayload.getRole()).isEqualTo(Role.USER);
     }
 
     @Test
@@ -79,13 +88,9 @@ class AuthServiceImplTest {
         when(userRepository.findByEmail(loginRequest.getEmail()))
                 .thenReturn(Optional.empty());
 
-        ResponseStatusException exception = assertThrows(
-                ResponseStatusException.class,
-                () -> authService.login(loginRequest)
-        );
-
-        assertEquals(HttpStatus.UNAUTHORIZED, exception.getStatusCode());
-        assertEquals("Invalid credentials", exception.getReason());
+        assertThatThrownBy(() -> authService.login(loginRequest))
+                .isInstanceOf(InvalidCredentialsException.class)
+                .hasMessageContaining("Invalid credentials");
 
         verify(userRepository).findByEmail(loginRequest.getEmail());
         verify(passwordEncoder, never()).matches(anyString(), anyString());
@@ -99,13 +104,9 @@ class AuthServiceImplTest {
         when(passwordEncoder.matches(loginRequest.getPassword(), testUser.getPassword()))
                 .thenReturn(false);
 
-        ResponseStatusException exception = assertThrows(
-                ResponseStatusException.class,
-                () -> authService.login(loginRequest)
-        );
-
-        assertEquals(HttpStatus.UNAUTHORIZED, exception.getStatusCode());
-        assertEquals("Invalid credentials", exception.getReason());
+        assertThatThrownBy(() -> authService.login(loginRequest))
+                .isInstanceOf(InvalidCredentialsException.class)
+                .hasMessageContaining("Invalid credentials");
 
         verify(userRepository).findByEmail(loginRequest.getEmail());
         verify(passwordEncoder).matches(loginRequest.getPassword(), testUser.getPassword());
@@ -116,43 +117,64 @@ class AuthServiceImplTest {
     void refreshShouldReturnNewTokenWhenOldTokenValid() {
         String oldToken = "Bearer old.jwt.token";
         when(jwtService.isValid("old.jwt.token")).thenReturn(true);
+        when(tokenBlackListService.contains("old.jwt.token")).thenReturn(false);
         when(jwtService.refreshToken("old.jwt.token")).thenReturn("new.jwt.token");
 
         TokenResponse response = authService.refresh(oldToken);
 
-        assertNotNull(response);
-        assertEquals("new.jwt.token", response.getToken());
-        assertEquals("Bearer", response.getTokenType());
+        assertThat(response).isNotNull();
+        assertThat(response.getToken()).isEqualTo("new.jwt.token");
+        assertThat(response.getTokenType()).isEqualTo("Bearer");
 
         verify(jwtService).isValid("old.jwt.token");
+        verify(tokenBlackListService).contains("old.jwt.token");
         verify(jwtService).refreshToken("old.jwt.token");
+        verify(tokenBlackListService).add("old.jwt.token");
     }
 
     @Test
     void refreshShouldThrowExceptionWhenTokenInvalid() {
         String invalidToken = "Bearer invalid.token";
+        when(tokenBlackListService.contains("invalid.token")).thenReturn(false);
         when(jwtService.isValid("invalid.token")).thenReturn(false);
 
-        ResponseStatusException exception = assertThrows(
-                ResponseStatusException.class,
-                () -> authService.refresh(invalidToken)
-        );
-
-        assertEquals(HttpStatus.UNAUTHORIZED, exception.getStatusCode());
-        assertEquals("Token expired or invalid", exception.getReason());
+        assertThatThrownBy(() -> authService.refresh(invalidToken))
+                .isInstanceOf(TokenInvalidException.class)
+                .hasMessageContaining("Token expired or invalid");
 
         verify(jwtService).isValid("invalid.token");
         verify(jwtService, never()).refreshToken(anyString());
     }
 
     @Test
-    void refreshShouldThrowExceptionWhenAuthorizationHeaderInvalid() {
-        assertThrows(ResponseStatusException.class, () -> {
-            authService.refresh("InvalidHeader");
-        });
+    void refreshShouldThrowExceptionWhenTokenBlacklisted() {
+        String blacklistedToken = "Bearer blacklisted.token";
+        when(tokenBlackListService.contains("blacklisted.token")).thenReturn(true);
 
-        assertThrows(ResponseStatusException.class, () -> {
-            authService.refresh(null);
-        });
+        assertThatThrownBy(() -> authService.refresh(blacklistedToken))
+                .isInstanceOf(TokenInvalidException.class)
+                .hasMessageContaining("Token expired or invalid");
+
+        verify(tokenBlackListService).contains("blacklisted.token");
+        verify(jwtService, never()).isValid(anyString());
+        verify(jwtService, never()).refreshToken(anyString());
+    }
+
+    @Test
+    void refreshShouldThrowExceptionWhenAuthorizationHeaderInvalid() {
+        assertThatThrownBy(() -> authService.refresh("InvalidHeader"))
+                .isInstanceOf(IllegalArgumentException.class);
+
+        assertThatThrownBy(() -> authService.refresh(null))
+                .isInstanceOf(IllegalArgumentException.class);
+    }
+
+    @Test
+    void logoutShouldAddTokenToBlacklist() {
+        String authorization = "Bearer some.token";
+
+        authService.logout(authorization);
+
+        verify(tokenBlackListService).add("some.token");
     }
 }

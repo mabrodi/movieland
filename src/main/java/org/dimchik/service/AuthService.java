@@ -1,7 +1,7 @@
 package org.dimchik.service;
 
-import org.dimchik.web.response.TokenResponse;
-import org.dimchik.web.request.LoginRequest;
+import org.dimchik.dto.response.TokenResponse;
+import org.dimchik.dto.request.LoginRequest;
 
 public interface AuthService {
     TokenResponse login(LoginRequest request);

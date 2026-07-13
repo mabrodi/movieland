@@ -20,4 +20,3 @@ public class RateDTO {
     @JsonProperty("rate")
     private double rate;
 }
-

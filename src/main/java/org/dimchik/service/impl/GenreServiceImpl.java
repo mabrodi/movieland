@@ -1,20 +1,51 @@
 package org.dimchik.service.impl;
 
 import lombok.RequiredArgsConstructor;
-import org.dimchik.dto.GenreDTO;
+import lombok.extern.slf4j.Slf4j;
+import org.dimchik.dto.response.GenreResponse;
+import org.dimchik.entity.Genre;
+import org.dimchik.entity.Movie;
 import org.dimchik.repository.GenreRepository;
 import org.dimchik.service.GenreService;
+import org.dimchik.service.mapper.GenreMapper;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class GenreServiceImpl implements GenreService {
     private final GenreRepository genreRepository;
+    private final GenreMapper genreMapper;
 
     @Override
-    public List<GenreDTO> findAll() {
-        return genreRepository.findAllCached();
+    public List<GenreResponse> findAll() {
+        return genreMapper.toResponseList(genreRepository.findAll());
+    }
+
+    @Override
+    public void enrichSingleMovieByGenres(Movie movie) {
+        log.info("Start to enrich single movie by genres");
+
+        List<Genre> genres = genreRepository.findAllByMovieId(movie.getId());
+
+        if (!Thread.currentThread().isInterrupted()) {
+            movie.setGenres(genres);
+            log.info("Finish to enrich single movie by genres");
+        }
+    }
+
+    @Override
+    public void enrichMovieByGenreIds(Movie movie, List<Long> genreId) {
+        if (genreId == null || genreId.isEmpty()) {
+            return;
+        }
+
+        List<Genre> genres = genreRepository.findAllById(genreId);
+        if (genres.size() != genreId.size()) {
+            throw new IllegalArgumentException("Some genres not found");
+        }
+        movie.setGenres(genres);
     }
 }

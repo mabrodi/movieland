@@ -1,6 +1,7 @@
 package org.dimchik.web.exception;
 
 import jakarta.servlet.http.HttpServletRequest;
+import org.dimchik.dto.ExceptionDto;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -16,13 +17,13 @@ public class DefaultExceptionHandler {
 
     @ExceptionHandler(ResourceNotFoundException.class)
     @ResponseStatus(HttpStatus.NOT_FOUND)
-    public ErrorResponse handleResourceNotFound(ResourceNotFoundException e, HttpServletRequest request) {
-        return new ErrorResponse(HttpStatus.NOT_FOUND.value(), e.getMessage(), request.getRequestURI());
+    public ExceptionDto handleResourceNotFound(ResourceNotFoundException e, HttpServletRequest request) {
+        return new ExceptionDto(HttpStatus.NOT_FOUND, e.getMessage());
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handleValidationError(MethodArgumentNotValidException ex, HttpServletRequest request) {
+    public ExceptionDto handleValidationError(MethodArgumentNotValidException ex, HttpServletRequest request) {
         Map<String, String> errors = new HashMap<>();
 
         ex.getBindingResult().getAllErrors().forEach(error -> {
@@ -31,28 +32,36 @@ public class DefaultExceptionHandler {
             errors.put(fieldName, errorMessage);
         });
 
-        return new ErrorResponse(
-                HttpStatus.BAD_REQUEST.value(),
-                errors.toString(),
-                request.getRequestURI()
-        );
+        return new ExceptionDto(HttpStatus.BAD_REQUEST, errors.toString());
+    }
+
+    @ExceptionHandler(InvalidCredentialsException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public ExceptionDto handleInvalidCredentials(InvalidCredentialsException e, HttpServletRequest request) {
+        return new ExceptionDto(HttpStatus.UNAUTHORIZED, e.getMessage());
+    }
+
+    @ExceptionHandler(TokenInvalidException.class)
+    @ResponseStatus(HttpStatus.UNAUTHORIZED)
+    public ExceptionDto handleTokenInvalid(TokenInvalidException e, HttpServletRequest request) {
+        return new ExceptionDto(HttpStatus.UNAUTHORIZED, e.getMessage());
+    }
+
+    @ExceptionHandler(RelatedEntityNotFoundException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ExceptionDto handleRelatedEntityNotFound(RelatedEntityNotFoundException e, HttpServletRequest request) {
+        return new ExceptionDto(HttpStatus.BAD_REQUEST, e.getMessage());
     }
 
     @ExceptionHandler(IllegalArgumentException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
-    public ErrorResponse handleIllegalArgument(IllegalArgumentException e, HttpServletRequest request) {
-        return new ErrorResponse(HttpStatus.BAD_REQUEST.value(), e.getMessage(), request.getRequestURI());
+    public ExceptionDto handleIllegalArgument(IllegalArgumentException e, HttpServletRequest request) {
+        return new ExceptionDto(HttpStatus.BAD_REQUEST, e.getMessage());
     }
 
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
-    public ErrorResponse handleGenericException(Exception e, HttpServletRequest request) {
-        return new ErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR.value(), e.getMessage(), request.getRequestURI());
-    }
-
-    @ExceptionHandler(AuthenticateException.class)
-    @ResponseStatus(HttpStatus.UNAUTHORIZED)
-    public ErrorResponse handleGenericException(AuthenticateException e, HttpServletRequest request) {
-        return new ErrorResponse(HttpStatus.UNAUTHORIZED.value(), e.getMessage(), request.getRequestURI());
+    public ExceptionDto handleGenericException(Exception e, HttpServletRequest request) {
+        return new ExceptionDto(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
     }
 }

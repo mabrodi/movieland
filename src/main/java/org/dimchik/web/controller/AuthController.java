@@ -2,9 +2,9 @@ package org.dimchik.web.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.dimchik.web.response.TokenResponse;
+import org.dimchik.dto.response.TokenResponse;
 import org.dimchik.service.AuthService;
-import org.dimchik.web.request.LoginRequest;
+import org.dimchik.dto.request.LoginRequest;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;

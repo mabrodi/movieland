@@ -1,32 +1,31 @@
 package org.dimchik.service.impl;
 
-import org.dimchik.enums.Currency;
-import org.dimchik.web.response.MovieDetailResponse;
-import org.dimchik.web.response.MovieResponse;
-import org.dimchik.dto.RateDTO;
 import org.dimchik.entity.Country;
 import org.dimchik.entity.Genre;
 import org.dimchik.entity.Movie;
 import org.dimchik.entity.Poster;
-import org.dimchik.repository.CountryRepository;
-import org.dimchik.repository.GenreRepository;
 import org.dimchik.repository.MovieRepository;
-import org.dimchik.repository.PosterRepository;
-import org.dimchik.repository.mapper.MovieMapper;
+import org.dimchik.service.ConcurrentEnrichmentMovieService;
+import org.dimchik.service.assembler.MovieAssembler;
 import org.dimchik.service.cache.MovieCacheService;
-import org.dimchik.service.cache.RateCacheService;
-import org.dimchik.service.enrichment.MovieEnrichmentService;
-import org.dimchik.web.exception.ResourceNotFoundException;
+import org.dimchik.service.mapper.MovieMapper;
+import org.dimchik.web.exception.MovieNotFoundException;
 import org.dimchik.enums.SortDirection;
-import org.dimchik.web.request.CreateMovieRequest;
-import org.dimchik.web.request.UpdateMovieRequest;
+import org.dimchik.dto.request.CreateMovieRequest;
+import org.dimchik.dto.request.UpdateMovieRequest;
+import org.dimchik.dto.response.MovieDetailResponse;
+import org.dimchik.dto.response.MovieResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.*;
+import org.mockito.ArgumentCaptor;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -36,31 +35,26 @@ import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class MovieServiceImplTest {
+
     @Mock
     private MovieRepository movieRepository;
     @Mock
     private MovieMapper movieMapper;
     @Mock
-    private MovieEnrichmentService movieEnrichmentService;
-    @Mock
     private MovieCacheService movieCacheService;
     @Mock
-    private RateCacheService rateCacheService;
+    private MovieAssembler movieAssembler;
     @Mock
-    private CountryRepository countryRepository;
-    @Mock
-    private PosterRepository posterRepository;
-    @Mock
-    private GenreRepository genreRepository;
+    private ConcurrentEnrichmentMovieService concurrentEnrichmentMovieService;
 
     @InjectMocks
     private MovieServiceImpl movieService;
 
     private Movie movie1;
     private Movie movie2;
-    private MovieResponse movieResponse1;
-    private MovieResponse movieResponse2;
-    private MovieDetailResponse fullDtoBase;
+    private MovieResponse response1;
+    private MovieResponse response2;
+    private MovieDetailResponse detailResponse;
 
     @BeforeEach
     void setUp() {
@@ -87,7 +81,7 @@ class MovieServiceImplTest {
                 .poster(poster)
                 .build();
 
-        movieResponse1 = MovieResponse.builder()
+        response1 = MovieResponse.builder()
                 .id(1L)
                 .nameRussian("Побег из Шоушенка")
                 .nameNative("The Shawshank Redemption")
@@ -97,7 +91,7 @@ class MovieServiceImplTest {
                 .picturePath("shawshank.jpg")
                 .build();
 
-        movieResponse2 = MovieResponse.builder()
+        response2 = MovieResponse.builder()
                 .id(2L)
                 .nameRussian("Крестный отец")
                 .nameNative("The Godfather")
@@ -107,192 +101,150 @@ class MovieServiceImplTest {
                 .picturePath("shawshank.jpg")
                 .build();
 
-        fullDtoBase = MovieDetailResponse.builder()
+        detailResponse = MovieDetailResponse.builder()
                 .id(1L)
                 .nameRussian("Побег из Шоушенка")
                 .nameNative("The Shawshank Redemption")
+                .yearOfRelease(1994)
                 .rating(9.2)
-                .price(100.0)
+                .price(120.4)
+                .description("Classic movie")
                 .picturePath("shawshank.jpg")
+                .countries(Collections.emptyList())
+                .genres(Collections.emptyList())
+                .reviews(Collections.emptyList())
                 .build();
     }
 
-
     @Test
-    void findAllShouldUseRepositorySortAndMapToDto() {
+    void findAllShouldUseRepositorySortAndReturnMappedResponses() {
         when(movieRepository.findAll(any(Sort.class))).thenReturn(List.of(movie1, movie2));
-        when(movieMapper.toResponse(movie1)).thenReturn(movieResponse1);
-        when(movieMapper.toResponse(movie2)).thenReturn(movieResponse2);
+        when(movieMapper.toResponseList(List.of(movie1, movie2))).thenReturn(List.of(response1, response2));
 
         List<MovieResponse> result = movieService.findAll(SortDirection.DESC, null);
 
-        assertThat(result).containsExactly(movieResponse1, movieResponse2);
+        assertThat(result).containsExactly(response1, response2);
         verify(movieRepository).findAll(any(Sort.class));
-        verify(movieMapper).toResponse(movie1);
-        verify(movieMapper).toResponse(movie2);
-        verifyNoMoreInteractions(movieCacheService, movieEnrichmentService, rateCacheService);
+        verify(movieMapper).toResponseList(List.of(movie1, movie2));
     }
 
     @Test
     void findAllShouldReturnEmptyWhenRepoReturnsEmpty() {
         when(movieRepository.findAll(any(Sort.class))).thenReturn(List.of());
+        when(movieMapper.toResponseList(List.of())).thenReturn(List.of());
 
         List<MovieResponse> result = movieService.findAll(SortDirection.DESC, null);
 
         assertThat(result).isEmpty();
         verify(movieRepository).findAll(any(Sort.class));
-        verifyNoInteractions(movieMapper);
     }
 
+    @Test
+    void randomShouldReturnMappedResponses() {
+        when(movieRepository.findRandomMovies(PageRequest.of(0, 3))).thenReturn(List.of(movie1));
+        when(movieMapper.toResponseList(List.of(movie1))).thenReturn(List.of(response1));
+
+        List<MovieResponse> result = movieService.random(3);
+
+        assertThat(result).containsExactly(response1);
+        verify(movieRepository).findRandomMovies(PageRequest.of(0, 3));
+    }
 
     @Test
-    void random_shouldReturnEmptyWhenNoMovies() {
-        when(movieRepository.findAll()).thenReturn(List.of());
+    void randomShouldReturnEmptyWhenNoMovies() {
+        when(movieRepository.findRandomMovies(PageRequest.of(0, 5))).thenReturn(List.of());
+        when(movieMapper.toResponseList(List.of())).thenReturn(List.of());
 
         List<MovieResponse> result = movieService.random(5);
 
         assertThat(result).isEmpty();
-        verify(movieRepository).findAll();
-        verifyNoInteractions(movieMapper);
-    }
-
-
-    @Test
-    void findByIdShouldThrowWhenMovieNotInCache() {
-        when(movieCacheService.getMovie(1L)).thenReturn(null);
-
-        assertThatThrownBy(() -> movieService.findById(1L, Currency.UAH))
-                .isInstanceOf(ResourceNotFoundException.class)
-                .hasMessageContaining("Movie not found with id: 1");
-
-        verify(movieCacheService).getMovie(1L);
-        verifyNoMoreInteractions(movieCacheService);
-        verifyNoInteractions(movieEnrichmentService, rateCacheService);
     }
 
     @Test
-    void findByIdShouldEnrichAndNotConvertPriceForUAH() {
-        when(movieCacheService.getMovie(1L)).thenReturn(movie1);
-        when(movieEnrichmentService.enrich(movie1)).thenReturn(fullDtoBase);
+    void findByGenreIdShouldReturnMappedResponses() {
+        when(movieRepository.findMoviesByGenreId(2L)).thenReturn(List.of(movie1));
+        when(movieMapper.toResponseList(List.of(movie1))).thenReturn(List.of(response1));
 
-        MovieDetailResponse result = movieService.findById(1L, Currency.UAH);
+        List<MovieResponse> result = movieService.findByGenreId(2L);
 
-        assertThat(result).isSameAs(fullDtoBase);
-        assertThat(result.getPrice()).isEqualTo(100.0);
-
-        verify(movieCacheService).getMovie(1L);
-        verify(movieEnrichmentService).enrich(movie1);
-        verifyNoInteractions(rateCacheService);
+        assertThat(result).containsExactly(response1);
+        verify(movieRepository).findMoviesByGenreId(2L);
     }
 
     @Test
-    void findByIdShouldConvertPriceForUSDWhenRateExists() {
-        when(movieCacheService.getMovie(1L)).thenReturn(movie1);
-        when(movieEnrichmentService.enrich(movie1)).thenReturn(fullDtoBase);
-        when(rateCacheService.findAll()).thenReturn(List.of(
-                new RateDTO(1L, "US Dollar", "USD", 50.0),
-                new RateDTO(2L, "Euro", "EUR", 42.0)
-        ));
+    void findByIdShouldReturnCachedMovieWhenAvailable() {
+        when(movieCacheService.getById(1L)).thenReturn(movie1);
+        when(movieMapper.toDetailResponse(movie1)).thenReturn(detailResponse);
 
-        MovieDetailResponse result = movieService.findById(1L, Currency.USD);
+        MovieDetailResponse result = movieService.findById(1L);
 
-        assertThat(result.getPrice()).isEqualTo(100.0 * 50.0);
-        verify(rateCacheService).findAll();
+        assertThat(result).isSameAs(detailResponse);
+        verify(movieCacheService).getById(1L);
+        verifyNoInteractions(movieRepository, concurrentEnrichmentMovieService);
+        verify(movieMapper).toDetailResponse(movie1);
     }
 
     @Test
-    void findByIdShouldNotChangePriceWhenRateNotFound() {
-        when(movieCacheService.getMovie(1L)).thenReturn(movie1);
-        when(movieEnrichmentService.enrich(movie1)).thenReturn(fullDtoBase);
-        when(rateCacheService.findAll()).thenReturn(List.of(
-                new RateDTO(2L, "Euro", "EUR", 42.0)
-        ));
+    void findByIdShouldLoadFromDbWhenNotInCache() {
+        when(movieCacheService.getById(1L)).thenReturn(null);
+        when(movieRepository.findById(1L)).thenReturn(Optional.of(movie1));
+        when(movieMapper.toDetailResponse(movie1)).thenReturn(detailResponse);
 
-        MovieDetailResponse result = movieService.findById(1L, Currency.USD);
+        MovieDetailResponse result = movieService.findById(1L);
 
-        assertThat(result.getPrice()).isEqualTo(100.0);
-        verify(rateCacheService).findAll();
+        assertThat(result).isSameAs(detailResponse);
+        verify(movieCacheService).getById(1L);
+        verify(movieRepository).findById(1L);
+        verify(concurrentEnrichmentMovieService).enrichMovie(movie1);
+        verify(movieCacheService).add(movie1);
     }
 
+    @Test
+    void findByIdShouldThrowWhenMovieNotFoundInDb() {
+        when(movieCacheService.getById(999L)).thenReturn(null);
+        when(movieRepository.findById(999L)).thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> movieService.findById(999L))
+                .isInstanceOf(MovieNotFoundException.class)
+                .hasMessageContaining("Movie not found with id: 999");
+
+        verify(movieCacheService).getById(999L);
+        verify(movieRepository).findById(999L);
+        verify(concurrentEnrichmentMovieService, never()).enrichMovie(any());
+        verify(movieCacheService, never()).add(any());
+    }
 
     @Test
-    void createShouldMapApplyRelationsUpsertPosterSaveAndUpdateCache() {
+    void createShouldMapAssembleSaveAndReturnDetailResponse() {
         CreateMovieRequest request = new CreateMovieRequest();
         request.setPicturePath("poster.jpg");
         request.setGenres(List.of(2L));
         request.setCountries(List.of(1L));
+        request.setNameRussian("Новый фильм");
+        request.setNameNative("New Movie");
+        request.setYearOfRelease(2024);
+        request.setDescription("Описание");
+        request.setPrice(100.0);
+        request.setRating(8.5);
 
         Movie mapped = new Movie();
-        mapped.setPoster(null);
-
-        Genre genre = new Genre();
-        genre.setId(2L);
-        Country country = new Country();
-        country.setId(1L);
+        mapped.setId(5L);
 
         when(movieMapper.toEntity(request)).thenReturn(mapped);
-        when(genreRepository.findAllById(List.of(2L))).thenReturn(List.of(genre));
-        when(countryRepository.findAllById(List.of(1L))).thenReturn(List.of(country));
         when(movieRepository.save(mapped)).thenReturn(mapped);
-
-        MovieDetailResponse out = MovieDetailResponse.builder().id(99L).price(10.0).build();
-        when(movieMapper.toDetailResponse(mapped)).thenReturn(out);
+        when(movieMapper.toDetailResponse(mapped)).thenReturn(detailResponse);
 
         MovieDetailResponse result = movieService.create(request);
 
-        assertThat(result).isSameAs(out);
-
-        ArgumentCaptor<Poster> posterCaptor = ArgumentCaptor.forClass(Poster.class);
-        verify(posterRepository).save(posterCaptor.capture());
-        assertThat(posterCaptor.getValue().getPicturePath()).isEqualTo("poster.jpg");
-        assertThat(posterCaptor.getValue().getMovie()).isSameAs(mapped);
-
+        assertThat(result).isSameAs(detailResponse);
+        verify(movieMapper).toEntity(request);
+        verify(movieAssembler).enrichMovie(mapped, List.of(2L), List.of(1L), "poster.jpg");
         verify(movieRepository).save(mapped);
-        verify(movieCacheService).updateMovie(mapped);
-        verify(movieMapper).toDetailResponse(mapped);
+        verify(movieCacheService).invalidate(5L);
     }
 
     @Test
-    void createShouldThrowWhenSomeGenresMissing() {
-        CreateMovieRequest request = new CreateMovieRequest();
-        request.setGenres(List.of(1L, 2L));
-        request.setCountries(List.of());
-        request.setPicturePath(null);
-
-        when(movieMapper.toEntity(request)).thenReturn(new Movie());
-        when(genreRepository.findAllById(List.of(1L, 2L))).thenReturn(List.of(new Genre()));
-
-        assertThatThrownBy(() -> movieService.create(request))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Some genres not found");
-
-        verify(movieRepository, never()).save(any());
-        verify(movieCacheService, never()).updateMovie(any());
-        verifyNoInteractions(posterRepository);
-    }
-
-    @Test
-    void createShouldThrowWhenSomeCountriesMissing() {
-        CreateMovieRequest request = new CreateMovieRequest();
-        request.setGenres(List.of());
-        request.setCountries(List.of(10L, 11L));
-        request.setPicturePath(null);
-
-        when(movieMapper.toEntity(request)).thenReturn(new Movie());
-        when(countryRepository.findAllById(List.of(10L, 11L))).thenReturn(List.of(new Country())); // вернули 1
-
-        assertThatThrownBy(() -> movieService.create(request))
-                .isInstanceOf(IllegalArgumentException.class)
-                .hasMessageContaining("Some countries not found");
-
-        verify(movieRepository, never()).save(any());
-        verify(movieCacheService, never()).updateMovie(any());
-        verifyNoInteractions(posterRepository);
-    }
-
-
-    @Test
-    void updateShouldLoadMovieSaveAndUpdateCache() {
+    void updateShouldLoadApplyAndSave() {
         UpdateMovieRequest request = new UpdateMovieRequest();
         request.setPicturePath("new.jpg");
         request.setGenres(List.of(4L));
@@ -301,32 +253,17 @@ class MovieServiceImplTest {
         Movie existing = new Movie();
         existing.setId(1L);
 
-        Genre genre = new Genre();
-        genre.setId(4L);
-        Country country = new Country();
-        country.setId(3L);
-
         when(movieRepository.findById(1L)).thenReturn(Optional.of(existing));
-        when(genreRepository.findAllById(List.of(4L))).thenReturn(List.of(genre));
-        when(countryRepository.findAllById(List.of(3L))).thenReturn(List.of(country));
         when(movieRepository.save(existing)).thenReturn(existing);
-
-        MovieDetailResponse out = MovieDetailResponse.builder().id(1L).build();
-        when(movieMapper.toDetailResponse(existing)).thenReturn(out);
+        when(movieMapper.toDetailResponse(existing)).thenReturn(detailResponse);
 
         MovieDetailResponse result = movieService.update(1L, request);
 
-        assertThat(result).isSameAs(out);
-
+        assertThat(result).isSameAs(detailResponse);
         verify(movieMapper).updateMovieFromRequest(request, existing);
-
-        verify(posterRepository).save(argThat(p ->
-                "new.jpg".equals(p.getPicturePath()) && p.getMovie() == existing
-        ));
-
+        verify(movieAssembler).enrichMovie(existing, List.of(4L), List.of(3L), "new.jpg");
         verify(movieRepository).save(existing);
-        verify(movieCacheService).updateMovie(existing);
-        verify(movieMapper).toDetailResponse(existing);
+        verify(movieCacheService).invalidate(1L);
     }
 
     @Test
@@ -334,7 +271,7 @@ class MovieServiceImplTest {
         when(movieRepository.findById(1L)).thenReturn(Optional.empty());
 
         assertThatThrownBy(() -> movieService.update(1L, new UpdateMovieRequest()))
-                .isInstanceOf(ResourceNotFoundException.class)
+                .isInstanceOf(MovieNotFoundException.class)
                 .hasMessageContaining("Movie not found with id: 1");
 
         verify(movieRepository).findById(1L);

@@ -1,15 +1,9 @@
 package org.dimchik.security;
 
-import org.dimchik.dto.TokenUserDTO;
+import org.dimchik.dto.UserToken;
 import org.dimchik.enums.Role;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.User;
-
-import java.lang.reflect.Field;
-import java.util.Date;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -26,7 +20,7 @@ class JwtServiceTest {
 
     @Test
     void generateTokenShouldReturnNonEmptyToken() {
-        TokenUserDTO user = createTestUser();
+        UserToken user = createTestUser();
         String token = jwtService.generateToken(user);
 
         assertNotNull(token);
@@ -36,9 +30,9 @@ class JwtServiceTest {
 
     @Test
     void generateTokenShouldContainAllUserData() {
-        TokenUserDTO user = createTestUser();
+        UserToken user = createTestUser();
         String token = jwtService.generateToken(user);
-        TokenUserDTO extractedUser = jwtService.extractUser(token);
+        UserToken extractedUser = jwtService.extractUser(token);
 
         assertEquals(user.getId(), extractedUser.getId());
         assertEquals(user.getName(), extractedUser.getName());
@@ -48,7 +42,7 @@ class JwtServiceTest {
 
     @Test
     void generateTokenShouldCreateUniqueTokensForSameUser() {
-        TokenUserDTO user = createTestUser();
+        UserToken user = createTestUser();
 
         String token1 = jwtService.generateToken(user);
         String token2 = jwtService.generateToken(user);
@@ -58,12 +52,12 @@ class JwtServiceTest {
 
     @Test
     void extractUserShouldReturnCorrectUserData() {
-        TokenUserDTO originalUser = new TokenUserDTO(
+        UserToken originalUser = new UserToken(
                 1, "ronald", "ronald.reynolds66@example.com", Role.USER
         );
 
         String token = jwtService.generateToken(originalUser);
-        TokenUserDTO extractedUser = jwtService.extractUser(token);
+        UserToken extractedUser = jwtService.extractUser(token);
 
         assertAll(
                 () -> assertEquals(originalUser.getId(), extractedUser.getId()),
@@ -75,7 +69,7 @@ class JwtServiceTest {
 
     @Test
     void isValidShouldReturnTrueForValidToken() {
-        TokenUserDTO user = createTestUser();
+        UserToken user = createTestUser();
         String token = jwtService.generateToken(user);
 
         assertTrue(jwtService.isValid(token));
@@ -85,7 +79,7 @@ class JwtServiceTest {
     void isValidShouldReturnFalseForExpiredToken() throws InterruptedException {
         JwtService expiredService = new JwtService(SECRET, 0L);
 
-        TokenUserDTO user = createTestUser();
+        UserToken user = createTestUser();
         String token = expiredService.generateToken(user);
 
         Thread.sleep(1);
@@ -102,7 +96,7 @@ class JwtServiceTest {
 
     @Test
     void isValidShouldReturnFalseForTamperedToken() {
-        TokenUserDTO user = createTestUser();
+        UserToken user = createTestUser();
         String token = jwtService.generateToken(user);
 
         String tamperedToken = token + "a";
@@ -114,7 +108,7 @@ class JwtServiceTest {
     void isValidShouldReturnFalseForWrongSecretToken() {
         JwtService otherService = new JwtService("anotherSecretKeyThatIsDifferent123456", 1L);
 
-        TokenUserDTO user = createTestUser();
+        UserToken user = createTestUser();
         String token = otherService.generateToken(user);
 
         assertFalse(jwtService.isValid(token));
@@ -122,7 +116,7 @@ class JwtServiceTest {
 
     @Test
     void refreshTokenShouldReturnNewValidToken() {
-        TokenUserDTO user = createTestUser();
+        UserToken user = createTestUser();
         String oldToken = jwtService.generateToken(user);
         String newToken = jwtService.refreshToken(oldToken);
 
@@ -133,11 +127,11 @@ class JwtServiceTest {
 
     @Test
     void refreshTokenShouldPreserveUserData() {
-        TokenUserDTO originalUser = createTestUser();
+        UserToken originalUser = createTestUser();
         String oldToken = jwtService.generateToken(originalUser);
         String newToken = jwtService.refreshToken(oldToken);
 
-        TokenUserDTO refreshedUser = jwtService.extractUser(newToken);
+        UserToken refreshedUser = jwtService.extractUser(newToken);
 
         assertEquals(originalUser.getId(), refreshedUser.getId());
         assertEquals(originalUser.getEmail(), refreshedUser.getEmail());
@@ -146,7 +140,7 @@ class JwtServiceTest {
 
     @Test
     void refreshTokenShouldCreateTokenWithNewExpiration() {
-        TokenUserDTO user = createTestUser();
+        UserToken user = createTestUser();
         String oldToken = jwtService.generateToken(user);
         String newToken = jwtService.refreshToken(oldToken);
 
@@ -162,7 +156,7 @@ class JwtServiceTest {
 
     @Test
     void tokenShouldWorkWithNullName() {
-        TokenUserDTO user = new TokenUserDTO(1, null, "test@example.com", Role.USER);
+        UserToken user = new UserToken(1, null, "test@example.com", Role.USER);
         String token = jwtService.generateToken(user);
 
         assertTrue(jwtService.isValid(token));
@@ -173,7 +167,7 @@ class JwtServiceTest {
     void tokenShouldExpireExactlyAfterTtl() throws InterruptedException {
         JwtService tinyTtlService = new JwtService(SECRET, 0L);
 
-        TokenUserDTO user = createTestUser();
+        UserToken user = createTestUser();
         String token = tinyTtlService.generateToken(user);
 
         Thread.sleep(2);
@@ -181,8 +175,8 @@ class JwtServiceTest {
         assertFalse(tinyTtlService.isValid(token));
     }
 
-    private TokenUserDTO createTestUser() {
-        return new TokenUserDTO(
+    private UserToken createTestUser() {
+        return new UserToken(
                 1,
                 "ronald",
                 "ronald.reynolds66@example.com",

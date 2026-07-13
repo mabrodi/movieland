@@ -2,9 +2,9 @@ package org.dimchik.web.controller;
 
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.dimchik.dto.ReviewDTO;
 import org.dimchik.service.ReviewService;
-import org.dimchik.web.request.CreateReviewRequest;
+import org.dimchik.dto.response.ReviewResponse;
+import org.dimchik.dto.request.CreateReviewRequest;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -21,7 +21,7 @@ public class ReviewController {
 
     @PreAuthorize("hasAnyAuthority('USER')")
     @PostMapping
-    public ReviewDTO create(@RequestBody @Valid CreateReviewRequest request, @AuthenticationPrincipal UserDetails user) {
+    public ReviewResponse create(@RequestBody @Valid CreateReviewRequest request, @AuthenticationPrincipal UserDetails user) {
         return reviewService.create(request, user);
     }
 }

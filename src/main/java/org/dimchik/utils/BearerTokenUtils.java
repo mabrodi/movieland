@@ -4,7 +4,7 @@ public class BearerTokenUtils {
     public static final String PREFIX = "Bearer ";
 
     public static boolean hasBearerToken(String header) {
-        return header == null || !header.startsWith(PREFIX);
+        return header != null && header.startsWith(PREFIX);
     }
 
     public static String extractToken(String header) {
