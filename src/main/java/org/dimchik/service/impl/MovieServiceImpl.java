@@ -4,14 +4,12 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.dimchik.dto.response.MovieDetailResponse;
 import org.dimchik.dto.response.MovieResponse;
-import org.dimchik.service.ConcurrentEnrichmentMovieService;
+import org.dimchik.service.*;
 import org.springframework.data.domain.PageRequest;
 import org.dimchik.entity.Movie;
 import org.dimchik.repository.MovieRepository;
 import org.dimchik.repository.specification.MovieSortSpecification;
-import org.dimchik.service.MovieService;
 import org.dimchik.enums.SortDirection;
-import org.dimchik.service.assembler.MovieAssembler;
 import org.dimchik.service.cache.MovieCacheService;
 import org.dimchik.service.mapper.MovieMapper;
 import org.dimchik.web.exception.MovieNotFoundException;
@@ -30,7 +28,9 @@ public class MovieServiceImpl implements MovieService {
     private final MovieRepository movieRepository;
     private final MovieMapper movieMapper;
     private final MovieCacheService movieCacheService;
-    private final MovieAssembler movieAssembler;
+    private final GenreService genreService;
+    private final PosterService posterService;
+    private final CountryService countryService;
     private final ConcurrentEnrichmentMovieService concurrentEnrichmentMovieService;
 
     @Override
@@ -76,14 +76,15 @@ public class MovieServiceImpl implements MovieService {
     @Transactional
     @Override
     public MovieDetailResponse create(CreateMovieRequest request) {
-        Movie movie = movieMapper.toEntity(request);
+        Movie movie = movieMapper.createMovieFromEntity(request);
+        movie.setGenres(genreService.findAllIds(request.getGenres()));
+        movie.setCountries(countryService.findAllIds(request.getCountries()));
+        posterService.upsertPoster(movie, request.getPicturePath());
+        movieRepository.save(movie);
 
-        movieAssembler.enrichMovie(movie, request.getGenres(), request.getCountries(), request.getPicturePath());
+        movieCacheService.invalidate(movie.getId());
 
-        Movie createdMovie = movieRepository.save(movie);
-        movieCacheService.invalidate(createdMovie.getId());
-
-        return movieMapper.toDetailResponse(createdMovie);
+        return movieMapper.toDetailResponse(movie);
     }
 
     @Transactional
@@ -94,11 +95,13 @@ public class MovieServiceImpl implements MovieService {
 
         movieMapper.updateMovieFromRequest(request, movie);
 
-        movieAssembler.enrichMovie(movie, request.getGenres(), request.getCountries(), request.getPicturePath());
+        movie.setGenres(genreService.findAllIds(request.getGenres()));
+        movie.setCountries(countryService.findAllIds(request.getCountries()));
+        posterService.upsertPoster(movie, request.getPicturePath());
+        movieRepository.save(movie);
 
-        Movie updatedMovie = movieRepository.save(movie);
-        movieCacheService.invalidate(updatedMovie.getId());
+        movieCacheService.invalidate(movie.getId());
 
-        return movieMapper.toDetailResponse(updatedMovie);
+        return movieMapper.toDetailResponse(movie);
     }
 }

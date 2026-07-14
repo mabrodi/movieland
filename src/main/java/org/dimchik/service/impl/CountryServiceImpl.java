@@ -8,6 +8,7 @@ import org.dimchik.repository.CountryRepository;
 import org.dimchik.service.CountryService;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
 
 @Slf4j
@@ -29,15 +30,16 @@ public class CountryServiceImpl implements CountryService {
     }
 
     @Override
-    public void enrichMovieByCountryIds(Movie movie, List<Long> countryIds) {
-        if (countryIds == null || countryIds.isEmpty()) {
-            return;
+    public List<Country> findAllIds(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return Collections.emptyList();
         }
+        List<Country> countries = countryRepository.findAllById(ids);
 
-        List<Country> countries = countryRepository.findAllById(countryIds);
-        if (countries.size() != countryIds.size()) {
+        if (ids.size() != countries.size()) {
             throw new IllegalArgumentException("Some countries not found");
         }
-        movie.setCountries(countries);
+
+        return countries;
     }
 }

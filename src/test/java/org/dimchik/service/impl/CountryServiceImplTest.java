@@ -65,7 +65,7 @@ class CountryServiceImplTest {
     }
 
     @Test
-    void enrichMovieByCountryIdsShouldSetCountriesOnMovie() {
+    void findAllIdsShouldGetCountries() {
         Country country1 = new Country();
         country1.setId(1L);
         Country country2 = new Country();
@@ -73,33 +73,28 @@ class CountryServiceImplTest {
 
         when(countryRepository.findAllById(List.of(1L, 2L))).thenReturn(List.of(country1, country2));
 
-        countryService.enrichMovieByCountryIds(movie, List.of(1L, 2L));
-
-        assertThat(movie.getCountries()).hasSize(2).containsExactly(country1, country2);
+        List<Country> countries = countryService.findAllIds(List.of(1L, 2L));
+        assertThat(countries).hasSize(2).containsExactly(country1, country2);
         verify(countryRepository).findAllById(List.of(1L, 2L));
     }
 
     @Test
-    void enrichMovieByCountryIdsShouldDoNothingWhenIdsNull() {
-        countryService.enrichMovieByCountryIds(movie, null);
-
-        assertThat(movie.getCountries()).isNull();
-        verifyNoInteractions(countryRepository);
+    void findAllByIdsShouldDoNothingWhenIdsNull() {
+        List<Country> countries = countryService.findAllIds(null);
+        assertThat(countries).isEmpty();
     }
 
     @Test
-    void enrichMovieByCountryIdsShouldDoNothingWhenIdsEmpty() {
-        countryService.enrichMovieByCountryIds(movie, List.of());
-
-        assertThat(movie.getCountries()).isNull();
-        verifyNoInteractions(countryRepository);
+    void findAllByIdsShouldDoNothingWhenIdsEmpty() {
+        List<Country> countries = countryService.findAllIds(List.of());
+        assertThat(countries).isEmpty();
     }
 
     @Test
-    void enrichMovieByCountryIdsShouldThrowWhenCountriesNotFound() {
+    void findAllByIdsShouldThrowWhenCountriesNotFound() {
         when(countryRepository.findAllById(List.of(1L, 2L))).thenReturn(List.of(new Country()));
 
-        assertThatThrownBy(() -> countryService.enrichMovieByCountryIds(movie, List.of(1L, 2L)))
+        assertThatThrownBy(() -> countryService.findAllIds(List.of(1L, 2L)))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Some countries not found");
 

@@ -28,14 +28,11 @@ public interface MovieMapper {
 
     ReviewResponse toReviewResponse(Review review);
 
-    @Mapping(target = "id", ignore = true)
-    @Mapping(target = "createdAt", ignore = true)
-    @Mapping(target = "updatedAt", ignore = true)
     @Mapping(target = "poster", ignore = true)
     @Mapping(target = "reviews", ignore = true)
     @Mapping(target = "genres", ignore = true)
     @Mapping(target = "countries", ignore = true)
-    Movie toEntity(CreateMovieRequest request);
+    Movie createMovieFromEntity(CreateMovieRequest request);
 
     @Mapping(target = "id", ignore = true)
     @Mapping(target = "createdAt", ignore = true)

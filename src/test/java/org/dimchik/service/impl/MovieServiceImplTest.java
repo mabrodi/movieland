@@ -1,12 +1,14 @@
 package org.dimchik.service.impl;
 
-import org.dimchik.entity.Country;
 import org.dimchik.entity.Genre;
+import org.dimchik.entity.Country;
 import org.dimchik.entity.Movie;
 import org.dimchik.entity.Poster;
 import org.dimchik.repository.MovieRepository;
 import org.dimchik.service.ConcurrentEnrichmentMovieService;
-import org.dimchik.service.assembler.MovieAssembler;
+import org.dimchik.service.CountryService;
+import org.dimchik.service.GenreService;
+import org.dimchik.service.PosterService;
 import org.dimchik.service.cache.MovieCacheService;
 import org.dimchik.service.mapper.MovieMapper;
 import org.dimchik.web.exception.MovieNotFoundException;
@@ -18,7 +20,6 @@ import org.dimchik.dto.response.MovieResponse;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -43,7 +44,11 @@ class MovieServiceImplTest {
     @Mock
     private MovieCacheService movieCacheService;
     @Mock
-    private MovieAssembler movieAssembler;
+    private GenreService genreService;
+    @Mock
+    PosterService posterService;
+    @Mock
+    CountryService countryService;
     @Mock
     private ConcurrentEnrichmentMovieService concurrentEnrichmentMovieService;
 
@@ -230,17 +235,30 @@ class MovieServiceImplTest {
         Movie mapped = new Movie();
         mapped.setId(5L);
 
-        when(movieMapper.toEntity(request)).thenReturn(mapped);
+        Genre genre = new Genre();
+        genre.setId(2L);
+        Country country = new Country();
+        country.setId(1L);
+
+        when(movieMapper.createMovieFromEntity(request)).thenReturn(mapped);
+        when(genreService.findAllIds(List.of(2L))).thenReturn(List.of(genre));
+        when(countryService.findAllIds(List.of(1L))).thenReturn(List.of(country));
         when(movieRepository.save(mapped)).thenReturn(mapped);
         when(movieMapper.toDetailResponse(mapped)).thenReturn(detailResponse);
 
         MovieDetailResponse result = movieService.create(request);
 
         assertThat(result).isSameAs(detailResponse);
-        verify(movieMapper).toEntity(request);
-        verify(movieAssembler).enrichMovie(mapped, List.of(2L), List.of(1L), "poster.jpg");
+
+        verify(movieMapper).createMovieFromEntity(request);
+        verify(genreService).findAllIds(List.of(2L));
+        verify(countryService).findAllIds(List.of(1L));
+        verify(posterService).upsertPoster(mapped, "poster.jpg");
         verify(movieRepository).save(mapped);
         verify(movieCacheService).invalidate(5L);
+
+        assertThat(mapped.getGenres()).containsExactly(genre);
+        assertThat(mapped.getCountries()).containsExactly(country);
     }
 
     @Test
@@ -253,17 +271,30 @@ class MovieServiceImplTest {
         Movie existing = new Movie();
         existing.setId(1L);
 
+        Genre genre = new Genre();
+        genre.setId(4L);
+        Country country = new Country();
+        country.setId(3L);
+
         when(movieRepository.findById(1L)).thenReturn(Optional.of(existing));
+        when(genreService.findAllIds(List.of(4L))).thenReturn(List.of(genre));
+        when(countryService.findAllIds(List.of(3L))).thenReturn(List.of(country));
         when(movieRepository.save(existing)).thenReturn(existing);
         when(movieMapper.toDetailResponse(existing)).thenReturn(detailResponse);
 
         MovieDetailResponse result = movieService.update(1L, request);
 
         assertThat(result).isSameAs(detailResponse);
+
         verify(movieMapper).updateMovieFromRequest(request, existing);
-        verify(movieAssembler).enrichMovie(existing, List.of(4L), List.of(3L), "new.jpg");
+        verify(genreService).findAllIds(List.of(4L));
+        verify(countryService).findAllIds(List.of(3L));
+        verify(posterService).upsertPoster(existing, "new.jpg");
         verify(movieRepository).save(existing);
         verify(movieCacheService).invalidate(1L);
+
+        assertThat(existing.getGenres()).containsExactly(genre);
+        assertThat(existing.getCountries()).containsExactly(country);
     }
 
     @Test

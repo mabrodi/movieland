@@ -1,6 +1,7 @@
 package org.dimchik.service.impl;
 
 import org.dimchik.dto.response.GenreResponse;
+import org.dimchik.entity.Country;
 import org.dimchik.entity.Genre;
 import org.dimchik.entity.Movie;
 import org.dimchik.repository.GenreRepository;
@@ -100,7 +101,7 @@ class GenreServiceImplTest {
     }
 
     @Test
-    void enrichMovieByGenreIdsShouldSetGenresOnMovie() {
+    void findAllIdsShouldGetGenres() {
         Genre genre1 = new Genre();
         genre1.setId(1L);
         Genre genre2 = new Genre();
@@ -108,33 +109,28 @@ class GenreServiceImplTest {
 
         when(genreRepository.findAllById(List.of(1L, 2L))).thenReturn(List.of(genre1, genre2));
 
-        genreService.enrichMovieByGenreIds(movie, List.of(1L, 2L));
-
-        assertThat(movie.getGenres()).hasSize(2).containsExactly(genre1, genre2);
+        List<Genre> genres = genreService.findAllIds(List.of(1L, 2L));
+        assertThat(genres).hasSize(2).containsExactly(genre1, genre2);
         verify(genreRepository).findAllById(List.of(1L, 2L));
     }
 
     @Test
-    void enrichMovieByGenreIdsShouldDoNothingWhenIdsNull() {
-        genreService.enrichMovieByGenreIds(movie, null);
-
-        assertThat(movie.getGenres()).isNull();
-        verifyNoInteractions(genreRepository);
+    void findAllIdsShouldDoNothingWhenIdsNull() {
+        List<Genre> genres = genreService.findAllIds(null);
+        assertThat(genres).isEmpty();
     }
 
     @Test
-    void enrichMovieByGenreIdsShouldDoNothingWhenIdsEmpty() {
-        genreService.enrichMovieByGenreIds(movie, List.of());
-
-        assertThat(movie.getGenres()).isNull();
-        verifyNoInteractions(genreRepository);
+    void findAllIdsShouldDoNothingWhenIdsEmpty() {
+        List<Genre> genres = genreService.findAllIds(List.of());
+        assertThat(genres).isEmpty();
     }
 
     @Test
-    void enrichMovieByGenreIdsShouldThrowWhenGenresNotFound() {
+    void findAllIdsShouldThrowWhenGenresNotFound() {
         when(genreRepository.findAllById(List.of(1L, 2L))).thenReturn(List.of(new Genre()));
 
-        assertThatThrownBy(() -> genreService.enrichMovieByGenreIds(movie, List.of(1L, 2L)))
+        assertThatThrownBy(() -> genreService.findAllIds(List.of(1L, 2L)))
                 .isInstanceOf(IllegalArgumentException.class)
                 .hasMessageContaining("Some genres not found");
 

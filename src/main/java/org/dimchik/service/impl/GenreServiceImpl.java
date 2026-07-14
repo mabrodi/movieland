@@ -10,6 +10,7 @@ import org.dimchik.service.GenreService;
 import org.dimchik.service.mapper.GenreMapper;
 import org.springframework.stereotype.Service;
 
+import java.util.Collections;
 import java.util.List;
 
 @Slf4j
@@ -37,15 +38,16 @@ public class GenreServiceImpl implements GenreService {
     }
 
     @Override
-    public void enrichMovieByGenreIds(Movie movie, List<Long> genreId) {
-        if (genreId == null || genreId.isEmpty()) {
-            return;
+    public List<Genre> findAllIds(List<Long> ids) {
+        if (ids == null || ids.isEmpty()) {
+            return Collections.emptyList();
         }
+        List<Genre> genres = genreRepository.findAllById(ids);
 
-        List<Genre> genres = genreRepository.findAllById(genreId);
-        if (genres.size() != genreId.size()) {
+        if (ids.size() != genres.size()) {
             throw new IllegalArgumentException("Some genres not found");
         }
-        movie.setGenres(genres);
+
+        return genres;
     }
 }
