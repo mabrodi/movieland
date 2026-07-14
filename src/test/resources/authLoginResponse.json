@@ -1,0 +1,4 @@
+{
+    "token": "jwt.token.here",
+    "tokenType": "Bearer"
+}

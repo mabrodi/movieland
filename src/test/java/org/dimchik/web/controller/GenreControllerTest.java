@@ -1,15 +1,16 @@
 package org.dimchik.web.controller;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.dimchik.dto.response.GenreResponse;
+import org.dimchik.security.AuthFilter;
 import org.dimchik.service.GenreService;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.MediaType;
-import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
-import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.List;
 
@@ -19,33 +20,30 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(GenreController.class)
 @AutoConfigureMockMvc(addFilters = false)
-@TestPropertySource(properties = {
-        "security.jwt.secret=0123456789abcdef0123456789abcdef",
-        "security.jwt.ttl-seconds=900",
-        "security.jwt.blacklist.cleanup-cron=0 * * * * *"
-})
-class GenreControllerTest {
-
-    @Autowired
-    private MockMvc mockMvc;
-
+class GenreControllerTest extends AbstractBaseTest {
     @MockitoBean
     private GenreService genreService;
 
+    @MockitoBean
+    private AuthFilter authFilter;
+
+    private final ObjectMapper objectMapper = new ObjectMapper();
+    private String genreListJson;
+    private List<GenreResponse> genreList;
+
+    @BeforeEach
+    void setUp() throws Exception {
+        genreListJson = readJson("genreList.json");
+        genreList = objectMapper.readValue(genreListJson, new TypeReference<List<GenreResponse>>() {});
+    }
+
     @Test
     void findAllShouldReturnGenreList() throws Exception {
-        GenreResponse genre1 = new GenreResponse(1L, "драма");
-        GenreResponse genre2 = new GenreResponse(2L, "криминал");
-        when(genreService.findAll()).thenReturn(List.of(genre1, genre2));
+        when(genreService.findAll()).thenReturn(genreList);
 
         mockMvc.perform(get("/api/v1/genres").accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$").isArray())
-                .andExpect(jsonPath("$.length()").value(2))
-                .andExpect(jsonPath("$[0].id").value(1))
-                .andExpect(jsonPath("$[0].name").value("драма"))
-                .andExpect(jsonPath("$[1].id").value(2))
-                .andExpect(jsonPath("$[1].name").value("криминал"));
+                .andExpect(content().json(genreListJson));
     }
 
     @Test
