@@ -2,15 +2,14 @@ package org.dimchik.service.impl;
 
 import org.dimchik.dto.request.CreateReviewRequest;
 import org.dimchik.dto.response.ReviewResponse;
-import org.dimchik.dto.response.UserResponse;
 import org.dimchik.entity.Movie;
 import org.dimchik.entity.Review;
 import org.dimchik.entity.User;
 import org.dimchik.repository.MovieRepository;
 import org.dimchik.repository.ReviewRepository;
 import org.dimchik.repository.UserRepository;
-import org.dimchik.web.exception.MovieNotFoundException;
-import org.dimchik.web.exception.UserNotFoundException;
+import org.dimchik.exception.MovieNotFoundException;
+import org.dimchik.exception.UserNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

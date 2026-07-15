@@ -12,7 +12,7 @@ import org.dimchik.repository.specification.MovieSortSpecification;
 import org.dimchik.enums.SortDirection;
 import org.dimchik.service.cache.MovieCacheService;
 import org.dimchik.mapper.MovieMapper;
-import org.dimchik.web.exception.MovieNotFoundException;
+import org.dimchik.exception.MovieNotFoundException;
 import org.dimchik.dto.request.CreateMovieRequest;
 import org.dimchik.dto.request.UpdateMovieRequest;
 import org.springframework.data.domain.Sort;

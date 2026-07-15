@@ -1,4 +1,4 @@
-package org.dimchik.web.exception;
+package org.dimchik.exception;
 
 public class TokenInvalidException extends RuntimeException {
     public TokenInvalidException(String message) {

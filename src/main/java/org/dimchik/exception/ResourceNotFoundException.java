@@ -1,4 +1,4 @@
-package org.dimchik.web.exception;
+package org.dimchik.exception;
 
 public class ResourceNotFoundException extends RuntimeException {
     public ResourceNotFoundException(String message) {
