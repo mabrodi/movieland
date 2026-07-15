@@ -7,14 +7,13 @@ import org.dimchik.dto.response.MovieResponse;
 import org.dimchik.security.AuthFilter;
 import org.dimchik.service.CurrencyService;
 import org.dimchik.service.MovieService;
-import org.dimchik.service.mapper.MovieMapper;
+import org.dimchik.mapper.MovieMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.webmvc.test.autoconfigure.AutoConfigureMockMvc;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
-import org.springframework.test.context.TestPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
 import java.util.List;

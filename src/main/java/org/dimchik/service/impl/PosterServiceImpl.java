@@ -15,7 +15,7 @@ public class PosterServiceImpl implements PosterService {
     private final PosterRepository posterRepository;
 
     @Override
-    public void upsertPoster(Movie movie, String picturePath) {
+    public Poster upsertPoster(Movie movie, String picturePath) {
         Poster poster = movie.getPoster();
         if (poster == null) {
             poster = new Poster();
@@ -23,5 +23,7 @@ public class PosterServiceImpl implements PosterService {
         }
         poster.setPicturePath(picturePath);
         posterRepository.save(poster);
+
+        return poster;
     }
 }

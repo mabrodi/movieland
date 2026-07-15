@@ -31,6 +31,7 @@ public class CountryServiceImpl implements CountryService {
 
     @Override
     public List<Country> findAllIds(List<Long> ids) {
+        log.info("start give list countries by ids: {}", ids);
         if (ids == null || ids.isEmpty()) {
             return Collections.emptyList();
         }
@@ -39,6 +40,8 @@ public class CountryServiceImpl implements CountryService {
         if (ids.size() != countries.size()) {
             throw new IllegalArgumentException("Some countries not found");
         }
+
+        log.info("end give list countries by ids: {}", ids);
 
         return countries;
     }

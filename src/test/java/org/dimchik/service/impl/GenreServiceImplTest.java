@@ -1,11 +1,10 @@
 package org.dimchik.service.impl;
 
 import org.dimchik.dto.response.GenreResponse;
-import org.dimchik.entity.Country;
 import org.dimchik.entity.Genre;
 import org.dimchik.entity.Movie;
 import org.dimchik.repository.GenreRepository;
-import org.dimchik.service.mapper.GenreMapper;
+import org.dimchik.mapper.GenreMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;

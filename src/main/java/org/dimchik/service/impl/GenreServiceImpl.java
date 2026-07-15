@@ -7,7 +7,7 @@ import org.dimchik.entity.Genre;
 import org.dimchik.entity.Movie;
 import org.dimchik.repository.GenreRepository;
 import org.dimchik.service.GenreService;
-import org.dimchik.service.mapper.GenreMapper;
+import org.dimchik.mapper.GenreMapper;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
@@ -39,6 +39,7 @@ public class GenreServiceImpl implements GenreService {
 
     @Override
     public List<Genre> findAllIds(List<Long> ids) {
+        log.info("start give list genres by ids : {}", ids);
         if (ids == null || ids.isEmpty()) {
             return Collections.emptyList();
         }
@@ -47,6 +48,8 @@ public class GenreServiceImpl implements GenreService {
         if (ids.size() != genres.size()) {
             throw new IllegalArgumentException("Some genres not found");
         }
+
+        log.info("end give list genres by ids: {}", ids);
 
         return genres;
     }

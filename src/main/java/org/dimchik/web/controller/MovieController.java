@@ -4,7 +4,7 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.dimchik.service.CurrencyService;
 import org.dimchik.service.MovieService;
-import org.dimchik.service.mapper.MovieMapper;
+import org.dimchik.mapper.MovieMapper;
 import org.dimchik.dto.request.CreateMovieRequest;
 import org.dimchik.dto.request.MovieByIdRequest;
 import org.dimchik.dto.request.MovieRequest;

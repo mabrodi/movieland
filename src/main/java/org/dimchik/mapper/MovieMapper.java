@@ -1,4 +1,4 @@
-package org.dimchik.service.mapper;
+package org.dimchik.mapper;
 
 import org.dimchik.dto.response.*;
 import org.dimchik.entity.Country;

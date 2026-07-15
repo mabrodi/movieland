@@ -10,7 +10,7 @@ import org.dimchik.service.CountryService;
 import org.dimchik.service.GenreService;
 import org.dimchik.service.PosterService;
 import org.dimchik.service.cache.MovieCacheService;
-import org.dimchik.service.mapper.MovieMapper;
+import org.dimchik.mapper.MovieMapper;
 import org.dimchik.web.exception.MovieNotFoundException;
 import org.dimchik.enums.SortDirection;
 import org.dimchik.dto.request.CreateMovieRequest;

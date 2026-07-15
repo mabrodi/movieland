@@ -11,7 +11,7 @@ import org.dimchik.repository.MovieRepository;
 import org.dimchik.repository.specification.MovieSortSpecification;
 import org.dimchik.enums.SortDirection;
 import org.dimchik.service.cache.MovieCacheService;
-import org.dimchik.service.mapper.MovieMapper;
+import org.dimchik.mapper.MovieMapper;
 import org.dimchik.web.exception.MovieNotFoundException;
 import org.dimchik.dto.request.CreateMovieRequest;
 import org.dimchik.dto.request.UpdateMovieRequest;
@@ -76,13 +76,16 @@ public class MovieServiceImpl implements MovieService {
     @Transactional
     @Override
     public MovieDetailResponse create(CreateMovieRequest request) {
+        log.info("Start to create movie");
         Movie movie = movieMapper.createMovieFromEntity(request);
         movie.setGenres(genreService.findAllIds(request.getGenres()));
         movie.setCountries(countryService.findAllIds(request.getCountries()));
-        posterService.upsertPoster(movie, request.getPicturePath());
         movieRepository.save(movie);
+        movie.setPoster(posterService.upsertPoster(movie, request.getPicturePath()));
 
-        movieCacheService.invalidate(movie.getId());
+        log.info("end create movie");
+        movieCacheService.add(movie);
+        log.info("add movie cache");
 
         return movieMapper.toDetailResponse(movie);
     }
@@ -93,14 +96,19 @@ public class MovieServiceImpl implements MovieService {
         Movie movie = movieRepository.findById(id)
                 .orElseThrow(() -> new MovieNotFoundException(id));
 
+        log.info("Start to update movie: {}", id);
+
         movieMapper.updateMovieFromRequest(request, movie);
 
         movie.setGenres(genreService.findAllIds(request.getGenres()));
         movie.setCountries(countryService.findAllIds(request.getCountries()));
-        posterService.upsertPoster(movie, request.getPicturePath());
         movieRepository.save(movie);
+        movie.setPoster(posterService.upsertPoster(movie, request.getPicturePath()));
+
+        log.info("end to update movie: {}", id);
 
         movieCacheService.invalidate(movie.getId());
+        log.info("update movie cache: {}", id);
 
         return movieMapper.toDetailResponse(movie);
     }
