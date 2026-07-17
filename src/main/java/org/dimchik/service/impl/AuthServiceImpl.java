@@ -41,7 +41,7 @@ public class AuthServiceImpl implements AuthService {
 
         String token = jwtService.generateToken(dto);
 
-        return new TokenResponse(token, "Bearer");
+        return new TokenResponse("Bearer " + token);
     }
 
     @Override
@@ -54,7 +54,7 @@ public class AuthServiceImpl implements AuthService {
         String newToken = jwtService.refreshToken(oldToken);
         tokenBlackListService.add(oldToken);
 
-        return new TokenResponse(newToken, "Bearer");
+        return new TokenResponse("Bearer " + newToken);
     }
 
     @Override
