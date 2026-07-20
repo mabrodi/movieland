@@ -22,12 +22,6 @@ public interface MovieMapper {
     @Mapping(target = "picturePath", source = "poster.picturePath")
     MovieDetailResponse toDetailResponse(Movie movie);
 
-    GenreResponse toGenreResponse(Genre genre);
-
-    CountryResponse toCountryResponse(Country country);
-
-    ReviewResponse toReviewResponse(Review review);
-
     @Mapping(target = "poster", ignore = true)
     @Mapping(target = "reviews", ignore = true)
     @Mapping(target = "genres", ignore = true)

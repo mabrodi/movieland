@@ -1,0 +1,93 @@
+swagger:
+    movies:
+        tag:
+            name: Movies
+            description: "Operations for managing the movie catalog: search, retrieval, creation, and updates."
+
+        find-all:
+            summary: "Get all movies"
+            description: "Returns a list of all available movies with filtering and sorting options."
+
+        find-by-id:
+            summary: "Get movie by ID"
+            description: "Returns detailed information about a movie by its ID, including price in the selected currency."
+            param-id: "Movie identifier"
+            param-currency: "Currency for price display (UAH, USD, EUR)"
+
+        random:
+            summery: "Get random movies"
+            description: "Returns a list of 3 random movies from the catalog"
+
+        find-by-genre-id:
+            summery: "Get movies by genre"
+            description: "Returns all movies belonging to the specified genre"
+            param-genre-id: "Genre ID"
+
+        create:
+            summary: "Create a movie"
+            description: "Adds a new movie to the database. Requires ADMIN role."
+
+        update:
+            summary: "Update a movie"
+            description: "Update movie details. Requires ADMIN role."
+            param-movie-id: "Movie ID"
+
+    genres:
+        tag:
+            name: "Genre"
+            description: "Operations related to movie genres"
+
+        find-all:
+            summary: "Get all genres"
+            description: "Returns a list of all available genres"
+
+    reviews:
+        tag:
+            name: "Review"
+            description: "Operations related to movie reviews"
+
+        create:
+            summary: "Create a review"
+            description: "Add a review for a specific movie. Requires USER role."
+
+    auth:
+        tag:
+            name: "Auth"
+            description: "Authentication and token management"
+
+        login:
+            summary: "Login"
+            description: "Authenticate user by email and password, returns JWT access token"
+
+        refresh:
+            summary: "Refresh token"
+            description: "Issue a new JWT access token using the current valid token"
+
+        logout:
+            summary: "Logout"
+            description: "Blacklist the current JWT token so it can no longer be used"
+
+
+    dto:
+        create-movie:
+            name-russian: "Movie name in Russian"
+            name-native: "Original movie name"
+            year-of-release: "Year the movie was released"
+            description: "Movie plot description"
+            price: "Movie rental/purchase price"
+            rating: "Movie rating from 0 to 10"
+            picture-path: "Path to the movie poster image"
+            countries: "List of production country IDs"
+            genres: "List of movie genre IDs"
+
+        login:
+            email: "User email address"
+            password: "User password"
+
+        create-review:
+            movie-id: "ID of the movie to review"
+            text: "Review text content"
+
+        find-all-movie:
+            rating-sort-direction: "Sort direction for rating (ASC or DESC)"
+            price-sort-direction: "Sort direction for price (ASC or DESC)"

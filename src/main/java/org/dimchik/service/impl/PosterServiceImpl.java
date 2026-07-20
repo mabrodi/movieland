@@ -1,6 +1,6 @@
 package org.dimchik.service.impl;
 
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.dimchik.entity.Movie;
 import org.dimchik.entity.Poster;
@@ -10,7 +10,7 @@ import org.springframework.stereotype.Service;
 
 @Slf4j
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class PosterServiceImpl implements PosterService {
     private final PosterRepository posterRepository;
 

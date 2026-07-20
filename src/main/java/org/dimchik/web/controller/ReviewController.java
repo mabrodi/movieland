@@ -1,5 +1,8 @@
 package org.dimchik.web.controller;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.dimchik.service.ReviewService;
@@ -16,9 +19,12 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/api/v1/reviews")
+@Tag(name="${swagger.reviews.tag.name}", description = "${swagger.reviews.tag.description}")
 public class ReviewController {
     private final ReviewService reviewService;
 
+    @Operation(summary = "${swagger.reviews.create.summary}", description = "${swagger.reviews.create.description}")
+    @SecurityRequirement(name = "bearerAuth")
     @PreAuthorize("hasAnyAuthority('USER')")
     @PostMapping
     public ReviewResponse create(@RequestBody @Valid CreateReviewRequest request, @AuthenticationPrincipal UserDetails user) {

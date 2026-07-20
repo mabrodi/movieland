@@ -2,6 +2,9 @@ spring:
     application:
         name: movie-land
 
+    config:
+        import: optional:classpath:springdoc-messages.yml
+
     datasource:
         url: ${SPRING_DATASOURCE_URL}
         username: ${SPRING_DATASOURCE_USERNAME}
@@ -36,7 +39,6 @@ client:
         url: ${CLIENT_RATE_URL}
 
 
-
 concurrent:
     enrichment:
         timeout: 5
@@ -50,3 +52,21 @@ security:
         ttl-seconds: ${SECURITY_JWT_TTL:900} #15 min
         blacklist:
             cleanup-cron: "0 * * * * *" # every minute
+
+springdoc:
+#    open-api:
+#        info:
+#            title: Movieland
+#            description: REST API for managing movie catalog.
+#            version: 1.0.0
+    swagger-ui:
+        display-request-duration: true
+        filter: false
+        doc-expansion: list
+        operations-sorter: method
+        path: "/swagger-ui.html"
+
+    override-with-generic-response: false
+    default-consumes-media-type: application/json
+    default-produces-media-type: application/json
+

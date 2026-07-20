@@ -1,6 +1,6 @@
 package org.dimchik.service.impl;
 
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.dimchik.entity.Country;
 import org.dimchik.entity.Movie;
@@ -13,7 +13,7 @@ import java.util.List;
 
 @Slf4j
 @Service
-@AllArgsConstructor
+@RequiredArgsConstructor
 public class CountryServiceImpl implements CountryService {
     private final CountryRepository countryRepository;
 

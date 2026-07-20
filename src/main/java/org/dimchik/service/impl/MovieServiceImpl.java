@@ -1,7 +1,8 @@
 package org.dimchik.service.impl;
 
-import lombok.AllArgsConstructor;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.dimchik.dto.request.FindAllMovieRequest;
 import org.dimchik.dto.response.MovieDetailResponse;
 import org.dimchik.dto.response.MovieResponse;
 import org.dimchik.service.*;
@@ -22,7 +23,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 @Slf4j
-@AllArgsConstructor
+@RequiredArgsConstructor
 @Service
 public class MovieServiceImpl implements MovieService {
     private final MovieRepository movieRepository;
@@ -34,8 +35,8 @@ public class MovieServiceImpl implements MovieService {
     private final ConcurrentEnrichmentMovieService concurrentEnrichmentMovieService;
 
     @Override
-    public List<MovieResponse> findAll(SortDirection ratingSortDirection, SortDirection priceSortDirection) {
-        Sort sort = MovieSortSpecification.build(ratingSortDirection, priceSortDirection);
+    public List<MovieResponse> findAll(FindAllMovieRequest request) {
+        Sort sort = MovieSortSpecification.build(request.getRatingSortDirection(), request.getPriceSortDirection());
         List<Movie> movieList = movieRepository.findAll(sort);
 
         return movieMapper.toResponseList(movieList);

@@ -1,16 +1,15 @@
 package org.dimchik.service;
 
+import org.dimchik.dto.request.FindAllMovieRequest;
 import org.dimchik.dto.response.MovieDetailResponse;
 import org.dimchik.dto.response.MovieResponse;
-import org.dimchik.entity.Movie;
-import org.dimchik.enums.SortDirection;
 import org.dimchik.dto.request.CreateMovieRequest;
 import org.dimchik.dto.request.UpdateMovieRequest;
 
 import java.util.List;
 
 public interface MovieService {
-    List<MovieResponse> findAll(SortDirection ratingSortDirection, SortDirection priceSortDirection);
+    List<MovieResponse> findAll(FindAllMovieRequest request);
 
     MovieDetailResponse findById(long id);
 
