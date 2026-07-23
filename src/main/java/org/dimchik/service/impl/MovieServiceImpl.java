@@ -111,6 +111,7 @@ public class MovieServiceImpl implements MovieService {
         log.info("end to update movie: {}", id);
 
         movieCacheService.invalidate(movie.getId());
+        movieCacheService.add(movie);
         log.info("update movie cache: {}", id);
 
         return movieMapper.toDetailResponse(movie);
