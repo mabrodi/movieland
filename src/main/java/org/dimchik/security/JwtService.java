@@ -3,7 +3,7 @@ package org.dimchik.security;
 import io.jsonwebtoken.*;
 import io.jsonwebtoken.security.Keys;
 import org.dimchik.enums.Role;
-import org.dimchik.dto.UserToken;
+import org.dimchik.dto.JwtUserDetails;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
@@ -25,7 +25,7 @@ public class JwtService {
         this.tokenTtl = ttl * 60 * 1000L;
     }
 
-    public String generateToken(UserToken user) {
+    public String generateToken(JwtUserDetails user) {
         Date now = new Date();
         Date expiration = new Date(now.getTime() + tokenTtl);
 
@@ -41,8 +41,8 @@ public class JwtService {
                 .compact();
     }
 
-    public UserToken extractUser(String token) {
-        return UserToken.builder()
+    public JwtUserDetails extractUser(String token) {
+        return JwtUserDetails.builder()
                 .id(parseToken(token).get("userId", Long.class))
                 .name(parseToken(token).get("name", String.class))
                 .email(parseToken(token).getSubject())
@@ -60,8 +60,8 @@ public class JwtService {
     }
 
     public String refreshToken(String token) {
-        UserToken extractUserFromToken = extractUser(token);
-        UserToken dto = UserToken.builder()
+        JwtUserDetails extractUserFromToken = extractUser(token);
+        JwtUserDetails dto = JwtUserDetails.builder()
                 .id(extractUserFromToken.getId())
                 .email(extractUserFromToken.getEmail())
                 .role(extractUserFromToken.getRole())

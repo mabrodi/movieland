@@ -1,0 +1,10 @@
+users:
+    -   id: 1
+        name: "Дарлин Эдвардс"
+        email: "test@gmail.com"
+        password: "$2a$10$TWbWJE98005EwNPVhkW7ouG.NKwalGEXx0.N7bRiWr6CT2DBSMpSG"
+
+    -   id: 2
+        name: "Габриэль Джексон"
+        email: "test1@gmail.com"
+        password: "$2a$10$TWbWJE98005EwNPVhkW7ouG.NKwalGEXx0.N7bRiWr6CT2DBSMpSG"

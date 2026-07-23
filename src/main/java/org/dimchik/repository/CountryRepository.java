@@ -10,6 +10,6 @@ import java.util.List;
 
 @Repository
 public interface CountryRepository extends JpaRepository<Country, Long> {
-    @Query("SELECT c FROM Country c JOIN c.movies m WHERE m.id = :movieId")
+    @Query(value = "SELECT c.* FROM countries c INNER JOIN movie_countries mc ON c.id = mc.country_id WHERE mc.movie_id = :movieId", nativeQuery = true)
     List<Country> findAllByMovieId(@Param("movieId") Long movieId);
 }

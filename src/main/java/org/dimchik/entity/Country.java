@@ -1,11 +1,8 @@
 package org.dimchik.entity;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
-
-import java.util.List;
 
 @Getter
 @Setter
@@ -17,8 +14,4 @@ public class Country {
 
     @Column(name = "name")
     private String name;
-
-    @JsonIgnore
-    @ManyToMany(mappedBy = "countries")
-    private List<Movie> movies;
 }

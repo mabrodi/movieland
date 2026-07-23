@@ -1,10 +1,12 @@
 package org.dimchik.service.impl;
 
+import org.dimchik.dto.JwtUserDetails;
 import org.dimchik.dto.request.CreateReviewRequest;
 import org.dimchik.dto.response.ReviewResponse;
 import org.dimchik.entity.Movie;
 import org.dimchik.entity.Review;
 import org.dimchik.entity.User;
+import org.dimchik.enums.Role;
 import org.dimchik.repository.MovieRepository;
 import org.dimchik.repository.ReviewRepository;
 import org.dimchik.repository.UserRepository;
@@ -17,8 +19,6 @@ import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
 
 import java.util.List;
 import java.util.Optional;
@@ -61,10 +61,7 @@ class ReviewServiceImplTest {
 
     @Test
     void createShouldSaveReviewAndReturnResponse() {
-        UserDetails principal = new org.springframework.security.core.userdetails.User(
-                "ronald@example.com", "ignored", List.of(new SimpleGrantedAuthority("USER"))
-        );
-
+        JwtUserDetails principal = new JwtUserDetails(1, "user", "ronald@example.com", Role.USER);
         when(movieRepository.findById(10L)).thenReturn(Optional.of(movie));
         when(userRepository.findByEmail("ronald@example.com")).thenReturn(Optional.of(dbUser));
         when(reviewRepository.save(any(Review.class))).thenAnswer(inv -> {
@@ -97,9 +94,7 @@ class ReviewServiceImplTest {
 
     @Test
     void createShouldThrowWhenMovieNotFound() {
-        UserDetails principal = new org.springframework.security.core.userdetails.User(
-                "u@example.com", "x", List.of()
-        );
+        JwtUserDetails principal = new JwtUserDetails(1, "user", "ronald@example.com", Role.USER);
 
         when(movieRepository.findById(999L)).thenReturn(Optional.empty());
         request.setMovieId(999L);
@@ -114,9 +109,7 @@ class ReviewServiceImplTest {
 
     @Test
     void createShouldThrowWhenUserNotFound() {
-        UserDetails principal = new org.springframework.security.core.userdetails.User(
-                "missing@example.com", "x", List.of()
-        );
+        JwtUserDetails principal = new JwtUserDetails(1, "user", "missing@example.com", Role.USER);
 
         when(movieRepository.findById(10L)).thenReturn(Optional.of(movie));
         when(userRepository.findByEmail("missing@example.com")).thenReturn(Optional.empty());

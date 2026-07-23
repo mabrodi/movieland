@@ -1,0 +1,10 @@
+genres:
+    -   id: 1
+        name: "драма"
+
+    -   id: 2
+        name: "криминал"
+
+countries:
+    -   id: 1
+        name: "США"

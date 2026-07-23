@@ -4,7 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.dimchik.security.TokenBlackListService;
 import org.dimchik.utils.BearerTokenUtils;
 import org.dimchik.dto.response.TokenResponse;
-import org.dimchik.dto.UserToken;
+import org.dimchik.dto.JwtUserDetails;
 import org.dimchik.entity.User;
 import org.dimchik.repository.UserRepository;
 import org.dimchik.security.JwtService;
@@ -33,7 +33,7 @@ public class AuthServiceImpl implements AuthService {
             throw new InvalidCredentialsException("Invalid credentials");
         }
 
-        UserToken dto = UserToken.builder()
+        JwtUserDetails dto = JwtUserDetails.builder()
                 .id(user.getId())
                 .email(user.getEmail())
                 .role(user.getRole())

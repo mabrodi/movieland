@@ -1,5 +1,6 @@
 package org.dimchik.service.impl;
 
+import org.dimchik.dto.request.FindAllMovieRequest;
 import org.dimchik.entity.Genre;
 import org.dimchik.entity.Country;
 import org.dimchik.entity.Movie;
@@ -126,7 +127,9 @@ class MovieServiceImplTest {
         when(movieRepository.findAll(any(Sort.class))).thenReturn(List.of(movie1, movie2));
         when(movieMapper.toResponseList(List.of(movie1, movie2))).thenReturn(List.of(response1, response2));
 
-        List<MovieResponse> result = movieService.findAll(SortDirection.DESC, null);
+        FindAllMovieRequest findAllMovieRequest = new FindAllMovieRequest();
+        findAllMovieRequest.setRatingSortDirection(SortDirection.DESC);
+        List<MovieResponse> result = movieService.findAll(findAllMovieRequest);
 
         assertThat(result).containsExactly(response1, response2);
         verify(movieRepository).findAll(any(Sort.class));
@@ -138,7 +141,9 @@ class MovieServiceImplTest {
         when(movieRepository.findAll(any(Sort.class))).thenReturn(List.of());
         when(movieMapper.toResponseList(List.of())).thenReturn(List.of());
 
-        List<MovieResponse> result = movieService.findAll(SortDirection.DESC, null);
+        FindAllMovieRequest findAllMovieRequest = new FindAllMovieRequest();
+        findAllMovieRequest.setRatingSortDirection(SortDirection.DESC);
+        List<MovieResponse> result = movieService.findAll(findAllMovieRequest);
 
         assertThat(result).isEmpty();
         verify(movieRepository).findAll(any(Sort.class));
@@ -255,7 +260,6 @@ class MovieServiceImplTest {
         verify(countryService).findAllIds(List.of(1L));
         verify(posterService).upsertPoster(mapped, "poster.jpg");
         verify(movieRepository).save(mapped);
-        verify(movieCacheService).invalidate(5L);
 
         assertThat(mapped.getGenres()).containsExactly(genre);
         assertThat(mapped.getCountries()).containsExactly(country);

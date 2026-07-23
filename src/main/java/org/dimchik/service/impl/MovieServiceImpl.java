@@ -10,7 +10,6 @@ import org.springframework.data.domain.PageRequest;
 import org.dimchik.entity.Movie;
 import org.dimchik.repository.MovieRepository;
 import org.dimchik.repository.specification.MovieSortSpecification;
-import org.dimchik.enums.SortDirection;
 import org.dimchik.service.cache.MovieCacheService;
 import org.dimchik.mapper.MovieMapper;
 import org.dimchik.exception.MovieNotFoundException;
@@ -37,7 +36,7 @@ public class MovieServiceImpl implements MovieService {
     @Override
     public List<MovieResponse> findAll(FindAllMovieRequest request) {
         Sort sort = MovieSortSpecification.build(request.getRatingSortDirection(), request.getPriceSortDirection());
-        List<Movie> movieList = movieRepository.findAll(sort);
+        List<Movie> movieList = movieRepository.findAllWithPoster(sort);
 
         return movieMapper.toResponseList(movieList);
     }
@@ -56,6 +55,9 @@ public class MovieServiceImpl implements MovieService {
         }
 
         log.info("Finish to get movie by id = {}", id);
+        log.info("movie genres = {}", movie.getGenres().size());
+        log.info("movie countries = {}", movie.getCountries().size());
+        log.info("movie reviews = {}", movie.getReviews().size());
 
         return movieMapper.toDetailResponse(movie);
     }

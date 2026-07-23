@@ -1,0 +1,37 @@
+movies:
+    -   id: 1
+        name_russian: "Побег из Шоушенка"
+        name_native: "The Shawshank Redemption"
+        year_of_release: 1994
+        description: "Description the Shawshank Redemption"
+        rating: 8.9
+        price: 123.45
+
+    -   id: 2
+        name_russian: "Зеленая миля"
+        name_native: "The Green Mile"
+        year_of_release: 1999
+        description: "Description the Green Mile"
+        rating: 8.9
+        price: 134.67
+
+    -   id: 3
+        name_russian: "Список Шиндлера"
+        name_native: "Schindler's List"
+        year_of_release: 1993
+        description: "Description Schindler's List"
+        rating: 8.7
+        price: 150.5
+
+posters:
+    -   id: 1
+        movie_id: 1
+        picture_path: "https://images-na.ssl-images-amazon.com/images/M/MV5BODU4MjU4NjIwNl5BMl5BanBnXkFtZTgwMDU2MjEyMDE@._V1._SY209_CR0,0,140,209_.jpg"
+
+    -   id: 2
+        movie_id: 2
+        picture_path: "https://images-na.ssl-images-amazon.com/images/M/MV5BMTUxMzQyNjA5MF5BMl5BanBnXkFtZTYwOTU2NTY3._V1._SY209_CR0,0,140,209_.jpg"
+
+    -   id: 3
+        movie_id: 3
+        picture_path: "https://images-na.ssl-images-amazon.com/images/M/MV5BNDE4OTMxMTctNmRhYy00NWE2LTg3YzItYTk3M2UwOTU5Njg4XkEyXkFqcGdeQXVyNjU0OTQ0OTY@._V1._SX140_CR0,0,140,209_.jpg"

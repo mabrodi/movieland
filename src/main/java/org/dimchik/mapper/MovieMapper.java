@@ -14,10 +14,16 @@ import org.mapstruct.ReportingPolicy;
 
 import java.util.List;
 
-@Mapper(componentModel = "spring", unmappedTargetPolicy = ReportingPolicy.IGNORE)
+@Mapper(componentModel = "spring",
+uses = {
+        ReviewMapper.class
+},
+unmappedTargetPolicy = ReportingPolicy.IGNORE)
 public interface MovieMapper {
-    @Mapping(target = "picturePath", source = "poster.picturePath")
     List<MovieResponse> toResponseList(List<Movie> movie);
+
+    @Mapping(target = "picturePath", source = "poster.picturePath")
+    MovieResponse toResponse(Movie movie);
 
     @Mapping(target = "picturePath", source = "poster.picturePath")
     MovieDetailResponse toDetailResponse(Movie movie);

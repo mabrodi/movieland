@@ -1,0 +1,8 @@
+{
+    "id": 1,
+    "comment": "Test",
+    "user": {
+        "id": 1,
+        "name": "User"
+    }
+}

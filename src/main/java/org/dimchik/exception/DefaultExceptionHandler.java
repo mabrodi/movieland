@@ -1,6 +1,7 @@
 package org.dimchik.exception;
 
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.extern.slf4j.Slf4j;
 import org.dimchik.dto.ExceptionDto;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.access.AccessDeniedException;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 @RestControllerAdvice
 public class DefaultExceptionHandler {
 
@@ -69,6 +71,7 @@ public class DefaultExceptionHandler {
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.INTERNAL_SERVER_ERROR)
     public ExceptionDto handleGenericException(Exception e, HttpServletRequest request) {
+        log.error("Unhandled exception", e);
         return new ExceptionDto(HttpStatus.INTERNAL_SERVER_ERROR, e.getMessage());
     }
 }

@@ -19,7 +19,7 @@ import java.util.concurrent.*;
 @Service
 @RequiredArgsConstructor
 public class ConcurrentEnrichmentMovieServiceImpl implements ConcurrentEnrichmentMovieService {
-    private final ExecutorService ENRICH_EXECUTOR_SERVICE = Executors.newCachedThreadPool();
+    private final ExecutorService ENRICH_EXECUTOR_SERVICE = Executors.newFixedThreadPool(3);
 
     private final CountryService countryService;
     private final GenreService genreService;

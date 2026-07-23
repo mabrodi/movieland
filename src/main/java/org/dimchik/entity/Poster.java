@@ -19,7 +19,7 @@ public class Poster {
     private Long id;
 
     @JsonIgnore
-    @OneToOne(fetch = FetchType.LAZY, optional = false)
+    @OneToOne
     @JoinColumn(name = "movie_id", nullable = false)
     private Movie movie;
 

@@ -7,8 +7,7 @@ import org.dimchik.enums.Role;
 @Setter
 @Builder
 @AllArgsConstructor
-@NoArgsConstructor
-public class UserToken {
+public class JwtUserDetails {
     private long id;
     private String name;
     private String email;

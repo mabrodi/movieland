@@ -1,0 +1,60 @@
+movies:
+    -   id: 1
+        name_russian: "Побег из Шоушенка"
+        name_native: "The Shawshank Redemption"
+        year_of_release: 1994
+        description: "Description the Shawshank Redemption"
+        rating: 8.90
+        price: 123.45
+
+posters:
+    -   id: 1
+        movie_id: 1
+        picture_path: "https://images-na.ssl-images-amazon.com/images/M/@._V1._SY209_CR0,0,140,209_.jpg"
+
+
+countries:
+    -   id: 1
+        name: "США"
+
+genres:
+    -   id: 1
+        name: "драма"
+
+    -   id: 2
+        name: "криминал"
+
+
+users:
+    -   id: 1
+        name: "Дарлин Эдвардс"
+        email: "test@gmail.com"
+        password: "1234"
+
+    -   id: 2
+        name: "Габриэль Джексон"
+        email: "test1@gmail.com"
+        password: "1234"
+
+reviews:
+    -   id: 1
+        comment: "Гениальное кино!"
+        author_id: 1
+        movie_id: 1
+
+    -   id: 2
+        comment: "Кино это является, безусловно, «со знаком качества»."
+        author_id: 2
+        movie_id: 1
+
+movie_genres:
+    -   movie_id: 1
+        genre_id: 1
+
+    -   movie_id: 1
+        genre_id: 2
+
+
+movie_countries:
+    -   movie_id: 1
+        country_id: 1

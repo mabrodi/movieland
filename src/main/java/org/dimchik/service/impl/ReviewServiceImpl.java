@@ -2,6 +2,7 @@ package org.dimchik.service.impl;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.dimchik.dto.JwtUserDetails;
 import org.dimchik.dto.response.ReviewResponse;
 import org.dimchik.dto.response.UserResponse;
 import org.dimchik.entity.Movie;
@@ -14,7 +15,6 @@ import org.dimchik.service.ReviewService;
 import org.dimchik.exception.MovieNotFoundException;
 import org.dimchik.exception.UserNotFoundException;
 import org.dimchik.dto.request.CreateReviewRequest;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -28,11 +28,11 @@ public class ReviewServiceImpl implements ReviewService {
     private final UserRepository userRepository;
 
     @Override
-    public ReviewResponse create(CreateReviewRequest request, UserDetails userDetails) {
+    public ReviewResponse create(CreateReviewRequest request, JwtUserDetails userDetails) {
         Movie movie = movieRepository.findById(request.getMovieId())
                 .orElseThrow(() -> new MovieNotFoundException(request.getMovieId()));
-        User user = userRepository.findByEmail(userDetails.getUsername())
-                .orElseThrow(() -> new UserNotFoundException(userDetails.getUsername()));
+        User user = userRepository.findByEmail(userDetails.getEmail())
+                .orElseThrow(() -> new UserNotFoundException(userDetails.getEmail()));
 
         Review review = new Review();
         review.setMovie(movie);

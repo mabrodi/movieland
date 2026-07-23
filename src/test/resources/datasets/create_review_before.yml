@@ -1,0 +1,15 @@
+movies:
+    -   id: 1
+        name_russian: "Побег из Шоушенка"
+        name_native: "The Shawshank Redemption"
+        year_of_release: 1994
+        description: "Description the Shawshank Redemption"
+        rating: 8.9
+        price: 123.45
+
+
+users:
+    -   id: 1
+        name: "User"
+        email: "user@test.com"
+        password: "1234"

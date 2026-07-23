@@ -8,6 +8,7 @@ import org.dimchik.entity.Movie;
 import org.dimchik.repository.GenreRepository;
 import org.dimchik.service.GenreService;
 import org.dimchik.mapper.GenreMapper;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
@@ -21,6 +22,7 @@ public class GenreServiceImpl implements GenreService {
     private final GenreMapper genreMapper;
 
     @Override
+    @Cacheable("genres")
     public List<GenreResponse> findAll() {
         return genreMapper.toResponseList(genreRepository.findAll());
     }

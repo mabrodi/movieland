@@ -1,6 +1,6 @@
 package org.dimchik.service.impl;
 
-import org.dimchik.dto.UserToken;
+import org.dimchik.dto.JwtUserDetails;
 import org.dimchik.entity.User;
 import org.dimchik.enums.Role;
 import org.dimchik.repository.UserRepository;
@@ -66,18 +66,17 @@ class AuthServiceImplTest {
                 .thenReturn(Optional.of(testUser));
         when(passwordEncoder.matches(loginRequest.getPassword(), testUser.getPassword()))
                 .thenReturn(true);
-        when(jwtService.generateToken(any(UserToken.class)))
+        when(jwtService.generateToken(any(JwtUserDetails.class)))
                 .thenReturn("test.jwt.token");
 
         TokenResponse response = authService.login(loginRequest);
 
         assertThat(response).isNotNull();
-        assertThat(response.getToken()).isEqualTo("test.jwt.token");
-        assertThat(response.getTokenType()).isEqualTo("Bearer");
+        assertThat(response.getToken()).isEqualTo("Bearer test.jwt.token");
 
-        ArgumentCaptor<UserToken> captor = ArgumentCaptor.forClass(UserToken.class);
+        ArgumentCaptor<JwtUserDetails> captor = ArgumentCaptor.forClass(JwtUserDetails.class);
         verify(jwtService).generateToken(captor.capture());
-        UserToken tokenPayload = captor.getValue();
+        JwtUserDetails tokenPayload = captor.getValue();
         assertThat(tokenPayload.getId()).isEqualTo(1L);
         assertThat(tokenPayload.getEmail()).isEqualTo("test@example.com");
         assertThat(tokenPayload.getRole()).isEqualTo(Role.USER);
@@ -123,8 +122,7 @@ class AuthServiceImplTest {
         TokenResponse response = authService.refresh(oldToken);
 
         assertThat(response).isNotNull();
-        assertThat(response.getToken()).isEqualTo("new.jwt.token");
-        assertThat(response.getTokenType()).isEqualTo("Bearer");
+        assertThat(response.getToken()).isEqualTo("Bearer new.jwt.token");
 
         verify(jwtService).isValid("old.jwt.token");
         verify(tokenBlackListService).contains("old.jwt.token");

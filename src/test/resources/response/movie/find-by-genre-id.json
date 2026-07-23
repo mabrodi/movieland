@@ -1,0 +1,20 @@
+[
+    {
+        "id": 1,
+        "nameRussian": "Побег из Шоушенка",
+        "nameNative": "The Shawshank Redemption",
+        "yearOfRelease": 1994,
+        "rating": 8.9,
+        "price": 123.45,
+        "picturePath": "https://images-na.ssl-images-amazon.com/images/M/MV5BODU4MjU4NjIwNl5BMl5BanBnXkFtZTgwMDU2MjEyMDE@._V1._SY209_CR0,0,140,209_.jpg"
+    },
+    {
+        "id": 2,
+        "nameRussian": "Зеленая миля",
+        "nameNative": "The Green Mile",
+        "yearOfRelease": 1999,
+        "rating": 8.9,
+        "price": 134.67,
+        "picturePath": "https://images-na.ssl-images-amazon.com/images/M/MV5BMTUxMzQyNjA5MF5BMl5BanBnXkFtZTYwOTU2NTY3._V1._SY209_CR0,0,140,209_.jpg"
+    }
+]

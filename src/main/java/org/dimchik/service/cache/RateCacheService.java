@@ -9,7 +9,6 @@ import org.dimchik.dto.RateDTO;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -25,7 +24,7 @@ public class RateCacheService {
     }
 
     @PostConstruct
-    @Scheduled(cron = "${cache.rate.refresh-cron}")
+    @Scheduled(cron = "${cron.rate}")
     public void update() {
         try {
             List<RateDTO> rates = rateClient.findAll();

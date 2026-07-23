@@ -5,7 +5,7 @@ import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
-import org.dimchik.dto.UserToken;
+import org.dimchik.dto.JwtUserDetails;
 import org.dimchik.utils.BearerTokenUtils;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -47,10 +47,10 @@ public class AuthFilter extends OncePerRequestFilter {
             if (!tokenBlackListService.contains(token)
                     && jwtService.isValid(token)
                     && SecurityContextHolder.getContext().getAuthentication() == null) {
-                UserToken userDTO = jwtService.extractUser(token);
+                JwtUserDetails userDTO = jwtService.extractUser(token);
 
                 UsernamePasswordAuthenticationToken auth = new UsernamePasswordAuthenticationToken(
-                        userDTO.getEmail(),
+                        userDTO,
                         null,
                         List.of(new SimpleGrantedAuthority(userDTO.getRole().name()))
                 );
