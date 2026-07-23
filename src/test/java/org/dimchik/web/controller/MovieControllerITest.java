@@ -4,7 +4,10 @@ package org.dimchik.web.controller;
 import com.github.database.rider.core.api.dataset.DataSet;
 import com.github.database.rider.core.api.dataset.ExpectedDataSet;
 import com.vladmihalcea.sql.SQLStatementCountValidator;
+import org.dimchik.service.cache.MovieCacheService;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 
@@ -13,6 +16,9 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 public class MovieControllerITest extends AbstractBaseITest {
+    @Autowired
+    private MovieCacheService movieCacheService;
+
     //ENDPOINTS
     private static final String MOVIES_API_URL = "/api/v1/movies";
 
@@ -27,6 +33,11 @@ public class MovieControllerITest extends AbstractBaseITest {
     private static final String REQUEST_CREATE_MOVIE_JSON = "request/movie/create.json";
     private static final String REQUEST_UPDATE_MOVIE_JSON = "request/movie/update.json";
 
+
+    @AfterEach
+    void clearCache() {
+        movieCacheService.clear();
+    }
 
     @Test
     @DataSet(value = "datasets/movies.yml",

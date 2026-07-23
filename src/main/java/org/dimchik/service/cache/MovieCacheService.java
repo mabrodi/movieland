@@ -28,4 +28,9 @@ public class MovieCacheService {
         log.debug("Invalidating cache for movie id = {}", movieId);
         cachedMovie.remove(movieId);
     }
+
+    public void clear() {
+        log.debug("Clear cache for movie");
+        cachedMovie.clear();
+    }
 }
