@@ -15,13 +15,14 @@ import org.dimchik.dto.request.FindAllMovieRequest;
 import org.dimchik.dto.request.UpdateMovieRequest;
 import org.dimchik.dto.response.MovieDetailResponse;
 import org.dimchik.dto.response.MovieResponse;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/v1")
+@RequestMapping("/api/v1/movies")
 @RequiredArgsConstructor
 @Tag(name="${swagger.movies.tag.name}", description = "${swagger.movies.tag.description}")
 public class MovieController {
@@ -30,7 +31,7 @@ public class MovieController {
 
     @PublicEndpoint
     @Operation(summary = "${swagger.movies.find-all.summary}", description = "${swagger.movies.find-all.description}")
-    @GetMapping("/movies")
+    @GetMapping
     public List<MovieResponse> findAll(@Valid @ModelAttribute FindAllMovieRequest request) {
         return movieService.findAll(request);
     }
@@ -40,7 +41,7 @@ public class MovieController {
             description = "${swagger.movies.find-by-id.description}"
     )
     @PublicEndpoint
-    @GetMapping("/movies/{id}")
+    @GetMapping("/{id}")
     public MovieDetailResponse findById(
             @Parameter(description = "${swagger.movies.find-by-id.param-id}", example = "1")
             @PathVariable long id,
@@ -52,7 +53,7 @@ public class MovieController {
 
     @PublicEndpoint
     @Operation(summary = "${swagger.movies.random.summery}", description = "${swagger.movies.random.description}")
-    @GetMapping("/movies/random")
+    @GetMapping("/random")
     public List<MovieResponse> random() {
         return movieService.random(3);
     }
@@ -62,7 +63,7 @@ public class MovieController {
             summary = "${swagger.movies.find-by-genre-id.summery}",
             description = "${swagger.movies.find-by-genre-id.description}"
     )
-    @GetMapping("/movies/genre/{genreId}")
+    @GetMapping("/genre/{genreId}")
     public List<MovieResponse> findByGenreId(
             @Parameter(description = "${swagger.movies.find-by-genre-id.param-genre-id}", example = "1")
             @PathVariable long genreId) {
@@ -72,7 +73,7 @@ public class MovieController {
     @Operation(summary = "${swagger.movies.create.summary}", description = "${swagger.movies.create.description}")
     @SecurityRequirement(name = "bearerAuth")
     @PreAuthorize("hasAnyAuthority('ADMIN')")
-    @PostMapping("/movies")
+    @PostMapping
     public MovieDetailResponse create(@Valid @RequestBody CreateMovieRequest request) {
         return movieService.create(request);
     }
@@ -80,11 +81,33 @@ public class MovieController {
     @Operation(summary = "${swagger.movies.update.summary}", description = "${swagger.movies.update.description}")
     @SecurityRequirement(name = "bearerAuth")
     @PreAuthorize("hasAnyAuthority('ADMIN')")
-    @PutMapping("/movies/{id}")
+    @PutMapping("/{id}")
     public MovieDetailResponse update(
-            @Parameter(description = "${swagger.movies.update.param-movie-id", example = "1")
+            @Parameter(description = "${swagger.movies.update.param-movie-id}", example = "1")
             @PathVariable long id,
             @Valid @RequestBody UpdateMovieRequest request) {
         return movieService.update(id, request);
+    }
+
+    @Operation(summary = "${swagger.movies.mark.summary}", description = "${swagger.movies.mark.description}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @SecurityRequirement(name = "bearerAuth")
+    @DeleteMapping("/{id}")
+    @PreAuthorize("hasAnyAuthority('ADMIN')")
+    public void mark(
+            @Parameter(description = "${swagger.movies.mark.param-id}", example = "1")
+            @PathVariable long id) {
+        movieService.queueForDeletion(id);
+    }
+
+    @Operation(summary = "${swagger.movies.unmark.summary}", description = "${swagger.movies.unmark.description}")
+    @ResponseStatus(HttpStatus.OK)
+    @SecurityRequirement(name = "bearerAuth")
+    @PreAuthorize("hasAnyAuthority('ADMIN')")
+    @PostMapping("/{id}/unmark")
+    public void unmark(
+            @Parameter(description = "${swagger.movies.unmark.param-id}", example = "1")
+            @PathVariable long id) {
+        movieService.removeFromDeletionQueue(id);
     }
 }

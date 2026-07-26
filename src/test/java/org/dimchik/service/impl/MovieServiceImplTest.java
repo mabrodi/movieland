@@ -9,6 +9,8 @@ import org.dimchik.repository.MovieRepository;
 import org.dimchik.service.ConcurrentEnrichmentMovieService;
 import org.dimchik.service.CountryService;
 import org.dimchik.service.GenreService;
+import org.dimchik.service.MovieDeletionQueueService;
+import org.dimchik.service.MovieRatingService;
 import org.dimchik.service.PosterService;
 import org.dimchik.service.cache.MovieCacheService;
 import org.dimchik.mapper.MovieMapper;
@@ -52,6 +54,10 @@ class MovieServiceImplTest {
     CountryService countryService;
     @Mock
     private ConcurrentEnrichmentMovieService concurrentEnrichmentMovieService;
+    @Mock
+    private MovieRatingService movieRatingService;
+    @Mock
+    private MovieDeletionQueueService movieDeletionQueueService;
 
     @InjectMocks
     private MovieServiceImpl movieService;
@@ -75,6 +81,9 @@ class MovieServiceImplTest {
                 .rating(9.2)
                 .price(120.4)
                 .poster(poster)
+                .genres(Collections.emptyList())
+                .countries(Collections.emptyList())
+                .reviews(Collections.emptyList())
                 .build();
 
         movie2 = Movie.builder()
@@ -85,6 +94,9 @@ class MovieServiceImplTest {
                 .rating(9.1)
                 .price(150.4)
                 .poster(poster)
+                .genres(Collections.emptyList())
+                .countries(Collections.emptyList())
+                .reviews(Collections.emptyList())
                 .build();
 
         response1 = MovieResponse.builder()
@@ -124,7 +136,7 @@ class MovieServiceImplTest {
 
     @Test
     void findAllShouldUseRepositorySortAndReturnMappedResponses() {
-        when(movieRepository.findAll(any(Sort.class))).thenReturn(List.of(movie1, movie2));
+        when(movieRepository.findAllWithPoster(any(Sort.class))).thenReturn(List.of(movie1, movie2));
         when(movieMapper.toResponseList(List.of(movie1, movie2))).thenReturn(List.of(response1, response2));
 
         FindAllMovieRequest findAllMovieRequest = new FindAllMovieRequest();
@@ -132,13 +144,13 @@ class MovieServiceImplTest {
         List<MovieResponse> result = movieService.findAll(findAllMovieRequest);
 
         assertThat(result).containsExactly(response1, response2);
-        verify(movieRepository).findAll(any(Sort.class));
+        verify(movieRepository).findAllWithPoster(any(Sort.class));
         verify(movieMapper).toResponseList(List.of(movie1, movie2));
     }
 
     @Test
     void findAllShouldReturnEmptyWhenRepoReturnsEmpty() {
-        when(movieRepository.findAll(any(Sort.class))).thenReturn(List.of());
+        when(movieRepository.findAllWithPoster(any(Sort.class))).thenReturn(List.of());
         when(movieMapper.toResponseList(List.of())).thenReturn(List.of());
 
         FindAllMovieRequest findAllMovieRequest = new FindAllMovieRequest();
@@ -146,7 +158,7 @@ class MovieServiceImplTest {
         List<MovieResponse> result = movieService.findAll(findAllMovieRequest);
 
         assertThat(result).isEmpty();
-        verify(movieRepository).findAll(any(Sort.class));
+        verify(movieRepository).findAllWithPoster(any(Sort.class));
     }
 
     @Test
@@ -235,7 +247,6 @@ class MovieServiceImplTest {
         request.setYearOfRelease(2024);
         request.setDescription("Описание");
         request.setPrice(100.0);
-        request.setRating(8.5);
 
         Movie mapped = new Movie();
         mapped.setId(5L);
@@ -311,5 +322,49 @@ class MovieServiceImplTest {
 
         verify(movieRepository).findById(1L);
         verifyNoMoreInteractions(movieRepository);
+    }
+
+    @Test
+    void queueForDeletionShouldScheduleMovieForDeletion() {
+        when(movieRepository.existsById(1L)).thenReturn(true);
+
+        movieService.queueForDeletion(1L);
+
+        verify(movieRepository).existsById(1L);
+        verify(movieDeletionQueueService).scheduleForDeletion(1L);
+    }
+
+    @Test
+    void queueForDeletionShouldThrowWhenMovieNotFound() {
+        when(movieRepository.existsById(999L)).thenReturn(false);
+
+        assertThatThrownBy(() -> movieService.queueForDeletion(999L))
+                .isInstanceOf(MovieNotFoundException.class)
+                .hasMessageContaining("Movie not found with id: 999");
+
+        verify(movieRepository).existsById(999L);
+        verify(movieDeletionQueueService, never()).scheduleForDeletion(anyLong());
+    }
+
+    @Test
+    void removeFromDeletionQueueShouldCancelDeletion() {
+        when(movieRepository.existsById(1L)).thenReturn(true);
+
+        movieService.removeFromDeletionQueue(1L);
+
+        verify(movieRepository).existsById(1L);
+        verify(movieDeletionQueueService).cancelDeletion(1L);
+    }
+
+    @Test
+    void removeFromDeletionQueueShouldThrowWhenMovieNotFound() {
+        when(movieRepository.existsById(999L)).thenReturn(false);
+
+        assertThatThrownBy(() -> movieService.removeFromDeletionQueue(999L))
+                .isInstanceOf(MovieNotFoundException.class)
+                .hasMessageContaining("Movie not found with id: 999");
+
+        verify(movieRepository).existsById(999L);
+        verify(movieDeletionQueueService, never()).cancelDeletion(anyLong());
     }
 }

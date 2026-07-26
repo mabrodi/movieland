@@ -30,11 +30,6 @@ public class CreateMovieRequest {
     @DecimalMin(value = "0.0", inclusive = false, message = "Price must be positive")
     private double price;
 
-    @Schema(description = "${swagger.dto.create-movie.rating}")
-    @DecimalMin(value = "0.0", message = "Rating must be 0 or more")
-    @DecimalMax(value = "10.0", message = "Rating cannot exceed 10")
-    private double rating;
-
     @Schema(description = "${swagger.dto.create-movie.picture-path}")
     @NotBlank(message = "Picture path is required")
     private String picturePath;

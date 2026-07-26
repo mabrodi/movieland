@@ -8,14 +8,14 @@ import org.dimchik.dto.response.UserResponse;
 import org.dimchik.entity.Movie;
 import org.dimchik.entity.Review;
 import org.dimchik.entity.User;
+import org.dimchik.exception.MovieNotFoundException;
 import org.dimchik.repository.MovieRepository;
 import org.dimchik.repository.ReviewRepository;
-import org.dimchik.repository.UserRepository;
 import org.dimchik.service.ReviewService;
-import org.dimchik.exception.MovieNotFoundException;
-import org.dimchik.exception.UserNotFoundException;
 import org.dimchik.dto.request.CreateReviewRequest;
+import org.dimchik.service.UserService;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -25,14 +25,14 @@ import java.util.List;
 public class ReviewServiceImpl implements ReviewService {
     private final ReviewRepository reviewRepository;
     private final MovieRepository movieRepository;
-    private final UserRepository userRepository;
+    private final UserService userService;
 
+    @Transactional
     @Override
     public ReviewResponse create(CreateReviewRequest request, JwtUserDetails userDetails) {
         Movie movie = movieRepository.findById(request.getMovieId())
                 .orElseThrow(() -> new MovieNotFoundException(request.getMovieId()));
-        User user = userRepository.findByEmail(userDetails.getEmail())
-                .orElseThrow(() -> new UserNotFoundException(userDetails.getEmail()));
+        User user = userService.getByEmail(userDetails.getEmail());
 
         Review review = new Review();
         review.setMovie(movie);

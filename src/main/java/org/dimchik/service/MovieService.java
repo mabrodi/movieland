@@ -5,6 +5,7 @@ import org.dimchik.dto.response.MovieDetailResponse;
 import org.dimchik.dto.response.MovieResponse;
 import org.dimchik.dto.request.CreateMovieRequest;
 import org.dimchik.dto.request.UpdateMovieRequest;
+import org.dimchik.entity.Movie;
 
 import java.util.List;
 
@@ -20,4 +21,8 @@ public interface MovieService {
     MovieDetailResponse create(CreateMovieRequest request);
 
     MovieDetailResponse update(long id, UpdateMovieRequest request);
+
+    void queueForDeletion(long id);
+
+    void removeFromDeletionQueue(long id);
 }

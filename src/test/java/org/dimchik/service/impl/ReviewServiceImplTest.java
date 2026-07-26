@@ -9,7 +9,7 @@ import org.dimchik.entity.User;
 import org.dimchik.enums.Role;
 import org.dimchik.repository.MovieRepository;
 import org.dimchik.repository.ReviewRepository;
-import org.dimchik.repository.UserRepository;
+import org.dimchik.service.UserService;
 import org.dimchik.exception.MovieNotFoundException;
 import org.dimchik.exception.UserNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
@@ -34,7 +34,7 @@ class ReviewServiceImplTest {
     @Mock
     private MovieRepository movieRepository;
     @Mock
-    private UserRepository userRepository;
+    private UserService userService;
 
     @InjectMocks
     private ReviewServiceImpl reviewService;
@@ -63,7 +63,7 @@ class ReviewServiceImplTest {
     void createShouldSaveReviewAndReturnResponse() {
         JwtUserDetails principal = new JwtUserDetails(1, "user", "ronald@example.com", Role.USER);
         when(movieRepository.findById(10L)).thenReturn(Optional.of(movie));
-        when(userRepository.findByEmail("ronald@example.com")).thenReturn(Optional.of(dbUser));
+        when(userService.getByEmail("ronald@example.com")).thenReturn(dbUser);
         when(reviewRepository.save(any(Review.class))).thenAnswer(inv -> {
             Review r = inv.getArgument(0);
             r.setId(123L);
@@ -88,15 +88,15 @@ class ReviewServiceImplTest {
         assertThat(saved.getComment()).isEqualTo("очень крутой фильм");
 
         verify(movieRepository).findById(10L);
-        verify(userRepository).findByEmail("ronald@example.com");
-        verifyNoMoreInteractions(movieRepository, userRepository, reviewRepository);
+        verify(userService).getByEmail("ronald@example.com");
+        verifyNoMoreInteractions(userService, reviewRepository);
     }
 
     @Test
     void createShouldThrowWhenMovieNotFound() {
         JwtUserDetails principal = new JwtUserDetails(1, "user", "ronald@example.com", Role.USER);
 
-        when(movieRepository.findById(999L)).thenReturn(Optional.empty());
+        when(movieRepository.findById(999L)).thenThrow(new MovieNotFoundException(999L));
         request.setMovieId(999L);
 
         assertThatThrownBy(() -> reviewService.create(request, principal))
@@ -104,7 +104,7 @@ class ReviewServiceImplTest {
                 .hasMessageContaining("Movie not found with id: 999");
 
         verify(movieRepository).findById(999L);
-        verifyNoInteractions(userRepository, reviewRepository);
+        verifyNoInteractions(userService, reviewRepository);
     }
 
     @Test
@@ -112,14 +112,14 @@ class ReviewServiceImplTest {
         JwtUserDetails principal = new JwtUserDetails(1, "user", "missing@example.com", Role.USER);
 
         when(movieRepository.findById(10L)).thenReturn(Optional.of(movie));
-        when(userRepository.findByEmail("missing@example.com")).thenReturn(Optional.empty());
+        when(userService.getByEmail("missing@example.com")).thenThrow(new UserNotFoundException("missing@example.com"));
 
         assertThatThrownBy(() -> reviewService.create(request, principal))
                 .isInstanceOf(UserNotFoundException.class)
                 .hasMessageContaining("User not found: missing@example.com");
 
         verify(movieRepository).findById(10L);
-        verify(userRepository).findByEmail("missing@example.com");
+        verify(userService).getByEmail("missing@example.com");
         verifyNoInteractions(reviewRepository);
     }
 

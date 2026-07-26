@@ -4,7 +4,6 @@ movies:
         name_native: "The Shawshank Redemption"
         year_of_release: 1994
         description: "Description the Shawshank Redemption"
-        rating: 8.9
         price: 123.45
 
     -   id: 2
@@ -12,7 +11,6 @@ movies:
         name_native: "The Green Mile"
         year_of_release: 1999
         description: "Description the Green Mile"
-        rating: 8.9
         price: 134.67
 
     -   id: 3
@@ -20,8 +18,30 @@ movies:
         name_native: "Schindler's List"
         year_of_release: 1993
         description: "Description Schindler's List"
-        rating: 8.7
         price: 150.5
+
+
+users:
+    -   id: 1
+        name: "Дарлин Эдвардс"
+        email: "test@gmail.com"
+        password: "1234"
+
+movie_ratings:
+    -   id: 1
+        movie_id: 1
+        user_id: 1
+        rating: 8.9
+
+    -   id: 2
+        movie_id: 2
+        user_id: 1
+        rating: 8.9
+
+    -   id: 3
+        movie_id: 3
+        user_id: 1
+        rating: 8.7
 
 posters:
     -   id: 1

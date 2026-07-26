@@ -62,6 +62,12 @@ public class DefaultExceptionHandler {
         return new ExceptionDto(HttpStatus.BAD_REQUEST, e.getMessage());
     }
 
+    @ExceptionHandler(AlreadyRatedException.class)
+    @ResponseStatus(HttpStatus.BAD_REQUEST)
+    public ExceptionDto handleAlreadyRated(AlreadyRatedException e, HttpServletRequest request) {
+        return new ExceptionDto(HttpStatus.BAD_REQUEST, e.getMessage());
+    }
+
     @ExceptionHandler(IllegalArgumentException.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ExceptionDto handleIllegalArgument(IllegalArgumentException e, HttpServletRequest request) {

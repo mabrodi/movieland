@@ -33,7 +33,7 @@ public class Movie {
     @Column(name = "description", nullable = false, columnDefinition = "text")
     private String description;
 
-    @Column(name = "rating")
+    @Transient
     private double rating;
 
     @Column(name = "price")

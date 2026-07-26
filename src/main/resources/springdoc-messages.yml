@@ -32,6 +32,36 @@ swagger:
             description: "Update movie details. Requires ADMIN role."
             param-movie-id: "Movie ID"
 
+        mark:
+            summary: "Mark a movie as deleted"
+            description: "Soft-deletes a movie by marking it as deleted. Requires ADMIN role."
+            param-id: "Movie ID"
+
+        unmark:
+            summary: "Restore a marked movie"
+            description: "Restores a previously soft-deleted movie. Requires ADMIN role."
+            param-id: "Movie ID"
+
+    movie-ratings:
+        tag:
+            name: "Movie Rating"
+            description: "Operations for managing user ratings on movies"
+
+        find-by-movie-id:
+            summary: "Get user's rating for a movie"
+            description: "Returns the current user's rating for a specific movie. Requires USER role."
+            param-movie-id: "Movie ID"
+
+        create:
+            summary: "Rate a movie"
+            description: "Creates a new rating for a specific movie. Requires USER role."
+            param-movie-id: "Movie ID"
+
+        update:
+            summary: "Update a movie rating"
+            description: "Updates the current user's rating for a specific movie. Requires USER role."
+            param-movie-id: "Movie ID"
+
     genres:
         tag:
             name: "Genre"
@@ -91,3 +121,6 @@ swagger:
         find-all-movie:
             rating-sort-direction: "Sort direction for rating (ASC or DESC)"
             price-sort-direction: "Sort direction for price (ASC or DESC)"
+
+        movie-rating:
+            rating: "Rating value from 0.0 to 10.0"

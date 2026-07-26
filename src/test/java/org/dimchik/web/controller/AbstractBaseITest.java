@@ -38,13 +38,16 @@ public class AbstractBaseITest {
     @Autowired
     private JwtService jwtService;
 
-    @Container
     @ServiceConnection
-    private static PostgreSQLContainer<?> postgres = new PostgreSQLContainer<>("postgres:14.12");
+    private static PostgreSQLContainer<?> POSTGRES_SQL_CONTAINER = new PostgreSQLContainer<>("postgres:14.12");
 
-    @Container
     @ServiceConnection
-    private static RedisContainer redis = new RedisContainer("redis:6.2.6");
+    private static RedisContainer REDIS__CONTAINER = new RedisContainer("redis:6.2.6");
+
+    static {
+        POSTGRES_SQL_CONTAINER.start();
+        REDIS__CONTAINER.start();
+    }
 
     protected String readJson(String jsonPath) {
         try (InputStream inputStream = new ClassPathResource(jsonPath).getInputStream();) {

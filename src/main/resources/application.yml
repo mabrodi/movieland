@@ -5,12 +5,6 @@ spring:
     config:
         import: optional:classpath:springdoc-messages.yml
 
-#    datasource:
-#        url: jdbc:postgresql://localhost:5432/movieland
-#        username: postgres
-#        password: postgres
-#        driver-class-name: ${SPRING_DATASOURCE_DRIVER_CLASS_NAME:org.postgresql.Driver}
-
     datasource:
         url: ${SPRING_DATASOURCE_URL}
         username: ${SPRING_DATASOURCE_USERNAME}
@@ -29,7 +23,7 @@ spring:
         validate-on-migrate: true
         locations:
             -   classpath:db/migration/schema
-            -   classpath:db/migration/data
+            -   classpath:db/migration/insert
 
 
     cache:
@@ -47,15 +41,11 @@ server:
 cache:
     default: 60 #1h in min
     genre: 240 #4 h in min
+    movie-rating-save: 5 #5 min
 
 cron:
     rate: "0 30 15 * * *" #every day 15:30
-
-#client:
-#    rate:
-#        url: https://bank.gov.ua
-
-
+    movie-removed-cache: "0 0 0 * * *" #every day 00:00
 
 client:
     rate:

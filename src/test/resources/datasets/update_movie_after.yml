@@ -4,7 +4,6 @@ movies:
         name_native: "The Green Mile"
         year_of_release: 1994
         description: "Description the Shawshank Redemption"
-        rating: 8.90
         price: 123.45
 
 posters:
@@ -35,6 +34,12 @@ users:
         name: "Габриэль Джексон"
         email: "test1@gmail.com"
         password: "1234"
+
+movie_ratings:
+    -   id: 1
+        movie_id: 1
+        user_id: 1
+        rating: 8.9
 
 reviews:
     -   id: 1
