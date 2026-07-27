@@ -16,7 +16,7 @@ import java.util.List;
 @Service
 @RequiredArgsConstructor
 public class RateCacheService {
-    private volatile List<RateDTO> list;
+    private volatile List<RateDTO> list = List.of();
     private final NbuRateClient rateClient;
 
     public List<RateDTO> findAll() {

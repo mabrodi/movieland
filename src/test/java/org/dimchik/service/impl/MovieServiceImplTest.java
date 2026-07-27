@@ -27,8 +27,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -136,7 +136,7 @@ class MovieServiceImplTest {
 
     @Test
     void findAllShouldUseRepositorySortAndReturnMappedResponses() {
-        when(movieRepository.findAllWithPoster(any(Sort.class))).thenReturn(List.of(movie1, movie2));
+        when(movieRepository.findAll()).thenReturn(new ArrayList<>(List.of(movie1, movie2)));
         when(movieMapper.toResponseList(List.of(movie1, movie2))).thenReturn(List.of(response1, response2));
 
         FindAllMovieRequest findAllMovieRequest = new FindAllMovieRequest();
@@ -144,13 +144,13 @@ class MovieServiceImplTest {
         List<MovieResponse> result = movieService.findAll(findAllMovieRequest);
 
         assertThat(result).containsExactly(response1, response2);
-        verify(movieRepository).findAllWithPoster(any(Sort.class));
+        verify(movieRepository).findAll();
         verify(movieMapper).toResponseList(List.of(movie1, movie2));
     }
 
     @Test
     void findAllShouldReturnEmptyWhenRepoReturnsEmpty() {
-        when(movieRepository.findAllWithPoster(any(Sort.class))).thenReturn(List.of());
+        when(movieRepository.findAll()).thenReturn(new ArrayList<>(List.of()));
         when(movieMapper.toResponseList(List.of())).thenReturn(List.of());
 
         FindAllMovieRequest findAllMovieRequest = new FindAllMovieRequest();
@@ -158,7 +158,7 @@ class MovieServiceImplTest {
         List<MovieResponse> result = movieService.findAll(findAllMovieRequest);
 
         assertThat(result).isEmpty();
-        verify(movieRepository).findAllWithPoster(any(Sort.class));
+        verify(movieRepository).findAll();
     }
 
     @Test

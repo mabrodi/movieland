@@ -6,16 +6,15 @@ import org.dimchik.dto.request.FindAllMovieRequest;
 import org.dimchik.dto.response.MovieDetailResponse;
 import org.dimchik.dto.response.MovieResponse;
 import org.dimchik.service.*;
+import org.dimchik.service.comparator.MovieComparator;
 import org.springframework.data.domain.PageRequest;
 import org.dimchik.entity.Movie;
 import org.dimchik.repository.MovieRepository;
-import org.dimchik.repository.specification.MovieSortSpecification;
 import org.dimchik.service.cache.MovieCacheService;
 import org.dimchik.mapper.MovieMapper;
 import org.dimchik.exception.MovieNotFoundException;
 import org.dimchik.dto.request.CreateMovieRequest;
 import org.dimchik.dto.request.UpdateMovieRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,9 +39,14 @@ public class MovieServiceImpl implements MovieService {
     @Transactional(readOnly = true)
     @Override
     public List<MovieResponse> findAll(FindAllMovieRequest request) {
-        Sort sort = MovieSortSpecification.build(request.getRatingSortDirection(), request.getPriceSortDirection());
-        List<Movie> movieList = movieRepository.findAllWithPoster(sort);
+        List<Movie> movieList = movieRepository.findAll();
         movieRatingService.enrichSingleMovieByRating(movieList);
+        movieList.sort(
+                MovieComparator.build(
+                        request.getRatingSortDirection(),
+                        request.getPriceSortDirection()
+                )
+        );
 
         return movieMapper.toResponseList(movieList);
     }
